@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:ledgerly/services/database_service.dart';
 import 'package:path_provider/path_provider.dart';
@@ -8,7 +10,9 @@ void main() async {
 
   final String documentsDirectory =
       (await getApplicationDocumentsDirectory()).path;
-  final String dbPath = p.join(documentsDirectory, 'ledgerly', 'db.sqlite3');
+  final String appDataDirectory = p.join(documentsDirectory, 'ledgerly');
+  Directory(appDataDirectory).createSync(recursive: true);
+  final String dbPath = p.join(appDataDirectory, 'db.sqlite3');
 
   initializeDatabase(path: dbPath);
   runApp(const MyApp());
