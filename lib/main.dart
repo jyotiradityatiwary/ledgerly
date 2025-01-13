@@ -1,6 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:ledgerly/services/database_service.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as p;
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  final String documentsDirectory =
+      (await getApplicationDocumentsDirectory()).path;
+  final String dbPath = p.join(documentsDirectory, 'ledgerly', 'db.sqlite3');
+
+  initializeDatabase(path: dbPath);
   runApp(const MyApp());
 }
 
