@@ -1,61 +1,20 @@
 import 'dart:io';
 
+import 'accounts_service.dart';
+import 'budgets_service.dart';
+import 'cloud_user_service.dart';
+import 'transaction_category_service.dart';
+import 'transaction_service.dart';
+import 'user_service.dart';
 import 'package:sqlite3/sqlite3.dart';
 
 const String _createTablesQueryString = '''
-CREATE TABLE CloudUsers (
-  cloud_user_id INTEGER PRIMARY KEY,
-  server_address TEXT NOT NULL,
-  identifier TEXT NOT NULL,
-  last_sync_datetime INTEGER NOT NULL,
-  login_expiry_datetime INTEGER NOT NULL
-);
-
-CREATE TABLE Users (
-  user_id INTEGER PRIMARY KEY,
-  user_name TEXT NOT NULL,
-  currency_precision INT NOT NULL,
-  currency TEXT NOT NULL,
-  cloud_user_id INTEGER DEFAULT NULL UNIQUE REFERENCES CloudUsers(cloud_user_id)
-);
-
-CREATE TABLE Accounts (
-  account_id INTEGER PRIMARY KEY,
-  user_id INTEGER NOT NULL REFERENCES Users(user_id),
-  initial_balance INTEGER NOT NULL,
-  current_balance INTEGER NOT NULL, -- derived
-  account_description TEXT DEFAULT NULL
-);
-
-CREATE TABLE TransactionCategories (
-  category_id INTEGER PRIMARY KEY,
-  user_id INTEGER NOT NULL REFERENCES Users(user_id),
-  category_name TEXT NOT NULL,
-  category_type INTEGER NOT NULL,
-  category_description TEXT DEFAULT NULL
-);
-
-CREATE TABLE Transactions (
-    transaction_id INTEGER PRIMARY KEY,
-    source_account_id INTEGER NOT NULL REFERENCES Accounts(account_id),
-    destination_account_id INTEGER NOT NULL REFERENCES Accounts(account_id),
-    amount INTEGER NOT NULL,
-    transaction_summary TEXT NOT NULL,
-    transaction_description TEXT DEFAULT NULL,
-    transaction_datetime INTEGER NOT NULL
-);
-
-CREATE TABLE Budgers (
-    budget_id INTEGER PRIMARY KEY,
-    user_id INTEGER NOT NULL REFERENCES Users(user_id),
-    category_id INTEGER NOT NULL REFERENCES TransactionCategories(category_id),
-    budget_amount INTEGER NOT NULL,
-    start_datetime INTEGER NOT NULL,
-    end_datetime INTEGER DEFAULT NULL,
-    recurrency_days INTEGER NOT NULL,
-    budget_name TEXT NOT NULL,
-    budget_description TEXT DEFAULT NULL
-);
+${CloudUser.createTableSql}
+${User.createTableSql}
+${Account.createTableSql}
+${TransactionCategory.createTableSql}
+${Transaction.createTableSql}
+${Budget.createTableSql}
 ''';
 
 late Database _db;

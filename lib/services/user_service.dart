@@ -6,24 +6,9 @@
 //   cloud_user_id INTEGER DEFAULT NULL UNIQUE REFERENCES CloudUsers(cloud_user_id)
 // )
 
+import 'package:ledgerly/services/cloud_user_service.dart';
 import 'package:ledgerly/services/database_service.dart';
 import 'package:sqlite3/sqlite3.dart';
-
-class CloudUser {
-  final int id;
-  final String serverAddress;
-  final String identifier;
-  final DateTime lastSync;
-  final DateTime loginExpiry;
-
-  CloudUser({
-    required this.id,
-    required this.serverAddress,
-    required this.identifier,
-    required this.lastSync,
-    required this.loginExpiry,
-  });
-}
 
 class User {
   int id;
@@ -48,6 +33,14 @@ class User {
         cloudUser: row.columnAt(4),
       );
 
+  static const createTableSql = '''
+CREATE TABLE Users (
+  user_id INTEGER PRIMARY KEY,
+  user_name TEXT NOT NULL,
+  currency_precision INT NOT NULL,
+  currency TEXT NOT NULL,
+  cloud_user_id INTEGER DEFAULT NULL UNIQUE REFERENCES CloudUsers(cloud_user_id)
+);''';
   static const sqlCols =
       'user_id, user_name, currency_precision, currency, cloud_user_id';
   static const sqlColsQuestions = '?, ?, ?, ?, ?';
