@@ -1,5 +1,5 @@
-import 'package:ledgerly/services/cloud_user_service.dart';
-import 'package:ledgerly/services/database_service.dart';
+import 'package:ledgerly/services/database/cloud_user_service.dart';
+import 'package:ledgerly/services/database_manager.dart';
 import 'package:sqlite3/sqlite3.dart';
 
 class User {

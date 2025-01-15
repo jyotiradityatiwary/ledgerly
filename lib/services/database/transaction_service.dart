@@ -1,7 +1,7 @@
-import 'package:ledgerly/services/accounts_service.dart';
+import 'package:ledgerly/services/database/accounts_service.dart';
 import 'package:sqlite3/sqlite3.dart';
 
-import 'database_service.dart';
+import '../database_manager.dart';
 
 class Transaction {
   final int id;

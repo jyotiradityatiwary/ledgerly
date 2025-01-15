@@ -1,21 +1,11 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
-import 'package:ledgerly/services/database_service.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:path/path.dart' as p;
+import 'package:ledgerly/services/app_manager.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  final String documentsDirectory =
-      (await getApplicationDocumentsDirectory()).path;
-  final String appDataDirectory = p.join(documentsDirectory, 'ledgerly');
-  Directory(appDataDirectory).createSync(recursive: true);
-  final String dbPath = p.join(appDataDirectory, 'db.sqlite3');
-
-  initializeDatabase(path: dbPath);
+  await initializeApp();
   runApp(const MyApp());
+  await disposeApp();
 }
 
 class MyApp extends StatelessWidget {
