@@ -1,12 +1,15 @@
 import 'dart:io';
+import 'dart:ui';
+import 'dart:developer' as developer;
 
-import 'package:ledgerly/constants.dart';
 import 'package:ledgerly/services/database_manager.dart';
+import 'package:ledgerly/services/preferences_service.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
 const String databseeFileName = "db.sqlite3";
 const String preferencesFileName = 'preferences.json';
+const String appDirName = 'ledgerly';
 
 Future<String> getAppDirPath() async {
   final String documentsDirectoryPath =
@@ -24,9 +27,14 @@ Future<void> initializeApp() async {
   }
 
   initializeDatabase(path: p.join(appDirPath, 'db.sqlite3'));
+  await initializePreferencesService();
+
+  developer.log("App initialized");
 }
 
 /// Frees up resources and closes open files / databases.
-Future<void> disposeApp() async {
+Future<AppExitResponse> disposeApp() async {
   closeDatabase();
+  developer.log("Exiting gracefully");
+  return AppExitResponse.exit;
 }
