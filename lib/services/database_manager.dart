@@ -1,7 +1,7 @@
 import 'dart:io';
 
-import 'database/accounts_service.dart';
-import 'database/budgets_service.dart';
+import 'database/account_service.dart';
+import 'database/budget_service.dart';
 import 'database/cloud_user_service.dart';
 import 'database/transaction_category_service.dart';
 import 'database/transaction_service.dart';

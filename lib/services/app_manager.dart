@@ -3,7 +3,7 @@ import 'dart:ui';
 import 'dart:developer' as developer;
 
 import 'package:ledgerly/services/database_manager.dart';
-import 'package:ledgerly/services/preferences_service.dart';
+import 'package:ledgerly/services/preference_service.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 

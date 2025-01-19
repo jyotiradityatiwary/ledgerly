@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:ledgerly/services/preferences_service.dart';
+import 'package:ledgerly/services/preference_service.dart';
 
 class LoginCheckerViewModel extends ChangeNotifier {
   bool get isLoggedIn => Preferences.isSomeOneLoggedIn.value;

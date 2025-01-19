@@ -1,4 +1,4 @@
-import 'package:ledgerly/services/database/accounts_service.dart';
+import 'package:ledgerly/services/database/account_service.dart';
 import 'package:sqlite3/sqlite3.dart';
 
 import '../database_manager.dart';
