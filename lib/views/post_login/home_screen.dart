@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:ledgerly/views/post_login/settings_page.dart';
 
-class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomeScreenState extends State<HomeScreen> {
   int currentIndex = 0;
 
   void changeIndex(int value) {
@@ -25,16 +26,24 @@ class _HomePageState extends State<HomePage> {
       BottomNavigationBarItem(label: "Debts", icon: Icon(Icons.pending)),
       BottomNavigationBarItem(label: "Settings", icon: Icon(Icons.settings)),
     ];
-    const Widget body = Placeholder();
+    const List<Widget> bodies = [
+      Placeholder(),
+      Placeholder(),
+      Placeholder(),
+      SettingsPage(),
+    ];
+    assert(bottomNavigationBarItems.length == bodies.length);
+
+    final body = bodies[currentIndex];
 
     return LayoutBuilder(
         builder: (BuildContext context, BoxConstraints constraints) {
       final bool verticalLayout =
           0.9 * constraints.maxHeight > constraints.maxWidth;
       return Scaffold(
-        // appBar: AppBar(
-        //   title: Text("Ledgerly"),
-        // ),
+        appBar: AppBar(
+          title: Text(bottomNavigationBarItems[currentIndex].label!),
+        ),
         body: verticalLayout
             ? body
             : Row(

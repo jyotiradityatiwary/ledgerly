@@ -12,8 +12,10 @@ Future<void> initializePreferencesService() async {
 }
 
 abstract final class Preferences {
-  static const Preference currentUserId = _IntPreference('currentUserId', -1),
-      isSomeOneLoggedIn = _BoolPreference('isSomeOneLoggedIn', false);
+  static const Preference<int> currentUserId =
+      _IntPreference('currentUserId', -1);
+  static const Preference<bool> isSomeOneLoggedIn =
+      _BoolPreference('isSomeOneLoggedIn', false);
 
   static const Set<Preference> _set = {currentUserId, isSomeOneLoggedIn};
 

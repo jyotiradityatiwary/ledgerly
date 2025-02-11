@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:ledgerly/notifiers/preferences_notifier.dart';
 import 'package:ledgerly/services/app_manager.dart';
-import 'package:ledgerly/views/login_checker/view.dart';
-import 'package:ledgerly/views/spash_screen.dart';
+import 'package:ledgerly/views/login_checker.dart';
+import 'package:ledgerly/views/loading_screen.dart';
+import 'package:provider/provider.dart';
 
 /// Handles initialization and disposal of the app
 class AppInitializer extends StatefulWidget {
@@ -32,14 +34,18 @@ class _AppInitializerState extends State<AppInitializer> {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<void>(
+    return LoadingScreen<void>(
       future: initializeApp(),
-      builder: (context, AsyncSnapshot snapshot) =>
-          switch (snapshot.connectionState) {
-        ConnectionState.done ||
-        ConnectionState.none =>
-          snapshot.hasError ? Text("error: ${snapshot.error}") : LoginChecker(),
-        ConnectionState.waiting || ConnectionState.active => SplashScreen(),
+      label: "Initializing App",
+      onCompleted: (void _) {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => ChangeNotifierProvider<PreferencesNotifier>(
+              create: (context) => PreferencesNotifier(),
+              child: LoginChecker(),
+            ),
+          ),
+        );
       },
     );
   }
