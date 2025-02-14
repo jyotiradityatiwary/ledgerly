@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ledgerly/views/post_login/accounts_page.dart';
 import 'package:ledgerly/views/post_login/settings_page.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -28,7 +29,7 @@ class _HomeScreenState extends State<HomeScreen> {
     ];
     const List<Widget> bodies = [
       Placeholder(),
-      Placeholder(),
+      AccountsPage(),
       Placeholder(),
       SettingsPage(),
     ];

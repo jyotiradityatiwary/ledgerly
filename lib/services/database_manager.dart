@@ -1,27 +1,32 @@
+import 'dart:core';
 import 'dart:io';
 
-import 'database/account_service.dart';
-import 'database/budget_service.dart';
-import 'database/cloud_user_service.dart';
-import 'database/transaction_category_service.dart';
-import 'database/transaction_service.dart';
-import 'database/user_service.dart';
+import 'package:ledgerly/model/schemas.dart';
+import 'package:ledgerly/model/table_schema.dart';
+import 'package:ledgerly/services/crud_services.dart';
 import 'package:sqlite3/sqlite3.dart';
+import 'dart:developer' as developer;
 
-const String _createAllTablesQueryString = '''
-${CloudUser.createTableSql}
-${User.createTableSql}
-${Account.createTableSql}
-${TransactionCategory.createTableSql}
-${Transaction.createTableSql}
-${Budget.createTableSql}
-''';
+final List<TableSchema> _allSchema = [
+  accountSchema,
+  budgetSchema,
+  cloudUserSchema,
+  transactionCategorySchema,
+  transactionSchema,
+  userSchema,
+];
 
-late Database _db;
+Database? _db;
+Database getDbInstance() => dbHandle;
+
+class DatabaseNotOpenError extends Error {}
 
 /// Should not be used directly by frontend code. For accessing the databse,
 /// use the functions in the `*_service.dart` files in the `database/` folder.
-Database get db => _db;
+Database get dbHandle {
+  if (_db == null) throw DatabaseNotOpenError();
+  return _db!;
+}
 
 late String _dbPath;
 
@@ -31,16 +36,44 @@ late String _dbPath;
 void initializeDatabase({required String path}) {
   _dbPath = path;
   final File file = File(_dbPath);
-  if (file.existsSync()) {
-    _db = sqlite3.open(_dbPath, mode: OpenMode.readWrite);
-  } else {
-    _db = sqlite3.open(_dbPath, mode: OpenMode.readWriteCreate);
-    db.execute(_createAllTablesQueryString);
-  }
+
+  // open the databse in read/write mode. Create the databse file if required
+  _db = sqlite3.open(
+    _dbPath,
+    mode: file.existsSync() ? OpenMode.readWrite : OpenMode.readWriteCreate,
+  );
+
+  // initialize tables if required
+  if (!_areTablesInitialized()) _initializeTables();
+}
+
+bool _areTablesInitialized() {
+  final sql = "SELECT name FROM sqlite_master WHERE type=? AND name=?";
+  final ResultSet resultSet = dbHandle.select(sql, [
+    'table',
+    _allSchema.first.tableName,
+  ]);
+  assert(resultSet.isEmpty || resultSet.length == 1);
+  return resultSet.isNotEmpty;
+}
+
+void _initializeTables() {
+  // merge `createTableSql` from all `schema`s
+  final createAllTablesQueryString =
+      _allSchema.map((schema) => schema.createTableSql).join('\n');
+
+  // create and open the database file
+  _db = sqlite3.open(_dbPath, mode: OpenMode.readWriteCreate);
+
+  // initialize all tables in a single transaction
+  dbHandle.execute(createAllTablesQueryString);
+  developer.log("tables initialized");
 }
 
 void closeDatabase() {
-  db.dispose();
+  dbHandle.dispose();
+
+  _db = null;
 }
 
 void deleteDatabase() {

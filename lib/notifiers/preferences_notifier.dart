@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:ledgerly/services/database/user_service.dart';
+import 'package:ledgerly/model/data_classes.dart';
+import 'package:ledgerly/services/crud_services.dart';
 import 'package:ledgerly/services/preference_service.dart';
 
 class PreferencesNotifier extends ChangeNotifier {
@@ -15,7 +16,7 @@ class PreferencesNotifier extends ChangeNotifier {
 
   Future<void> _loadUser() async {
     _user = Preferences.isSomeOneLoggedIn.value
-        ? getUser(Preferences.currentUserId.value)
+        ? userCrudService.getById(Preferences.currentUserId.value)
         : null;
     _isLoaded = true;
     notifyListeners();

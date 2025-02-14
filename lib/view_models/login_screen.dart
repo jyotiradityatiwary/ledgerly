@@ -1,13 +1,12 @@
 import 'dart:collection';
-
-import 'package:flutter/material.dart';
-import 'package:ledgerly/services/database/user_service.dart' as user_service;
 import 'dart:developer' as developer;
+import 'package:flutter/material.dart';
+import 'package:ledgerly/model/data_classes.dart';
+import 'package:ledgerly/services/crud_services.dart';
 
 class LoginScreenViewModel with ChangeNotifier {
-  List<user_service.User> _users = [];
-  UnmodifiableListView<user_service.User> get users =>
-      UnmodifiableListView(_users);
+  List<User> _users = [];
+  UnmodifiableListView<User> get users => UnmodifiableListView(_users);
 
   bool _isLoaded = false;
   bool get isLoaded => _isLoaded;
@@ -17,7 +16,7 @@ class LoginScreenViewModel with ChangeNotifier {
   }
 
   Future<void> _load() async {
-    _users = user_service.getAllUsers();
+    _users = userCrudService.getAll();
     _isLoaded = true;
     notifyListeners();
   }
@@ -35,7 +34,7 @@ class LoginScreenViewModel with ChangeNotifier {
 
     await _unLoad();
 
-    final userId = user_service.registerUser(
+    final userId = userCrudService.register(
       name: name,
       currencyPrecision: defaultCurrencyPrecision,
       currency: currency,
@@ -51,7 +50,7 @@ class LoginScreenViewModel with ChangeNotifier {
 
   Future<void> deleteUser(final int userId) async {
     await _unLoad();
-    user_service.deleteUser(id: userId);
+    userCrudService.delete(userId);
     await _load();
   }
 }
