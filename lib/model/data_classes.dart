@@ -1,11 +1,13 @@
 class Account {
   final int id;
+  final String name;
   final User user;
   final int initialBalance;
   final int currentBalance;
   final String? description;
   const Account({
     required this.id,
+    required this.name,
     required this.user,
     required this.initialBalance,
     required this.currentBalance,

@@ -10,69 +10,134 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int currentIndex = 0;
+  int _currentIndex = 0;
 
   void changeIndex(int value) {
     setState(() {
-      currentIndex = value;
+      _currentIndex = value;
     });
   }
+
+  static const List<_Destination> _destinations = [
+    _Destination(
+      title: 'Home',
+      icon: Icon(Icons.home),
+      body: Placeholder(),
+      floatingActionButton: null,
+    ),
+    _Destination(
+      title: 'Accounts',
+      icon: Icon(Icons.account_balance),
+      body: AccountsPage(),
+      floatingActionButton: AccountsPageFAB(),
+    ),
+    _Destination(
+      title: 'Debts',
+      icon: Icon(Icons.pending),
+      body: Placeholder(),
+      floatingActionButton: null,
+    ),
+    _Destination(
+      title: 'Settings',
+      icon: Icon(Icons.settings),
+      body: SettingsPage(),
+      floatingActionButton: null,
+    ),
+  ];
+
+  final List<BottomNavigationBarItem> _bottomNavigationBarItems = [
+    for (final destination in _destinations)
+      BottomNavigationBarItem(
+        label: destination.title,
+        icon: destination.icon,
+      )
+  ];
+
+  final List<NavigationRailDestination> _navigationRailDestinations = [
+    for (final destination in _destinations)
+      NavigationRailDestination(
+        icon: destination.icon,
+        label: Text(destination.title),
+      )
+  ];
+
+  @override
+  Widget build(context) => LayoutBuilder(
+        builder: (context, constraints) => _Scaffold(
+          destinations: _destinations,
+          bottomNavigationBarItems: _bottomNavigationBarItems,
+          navigationRailDestinations: _navigationRailDestinations,
+          currentIndex: _currentIndex,
+          changeIndex: changeIndex,
+          verticalLayout: 0.9 * constraints.maxHeight > constraints.maxWidth,
+        ),
+      );
+}
+
+class _Scaffold extends StatelessWidget {
+  final List<_Destination> _destinations;
+  final List<BottomNavigationBarItem> _bottomNavigationBarItems;
+  final List<NavigationRailDestination> _navigationRailDestinations;
+  final int _currentIndex;
+  final void Function(int) _changeIndex;
+  final bool verticalLayout;
+
+  const _Scaffold({
+    required List<_Destination> destinations,
+    required List<BottomNavigationBarItem> bottomNavigationBarItems,
+    required List<NavigationRailDestination> navigationRailDestinations,
+    required int currentIndex,
+    required void Function(int) changeIndex,
+    required this.verticalLayout,
+  })  : _changeIndex = changeIndex,
+        _currentIndex = currentIndex,
+        _navigationRailDestinations = navigationRailDestinations,
+        _bottomNavigationBarItems = bottomNavigationBarItems,
+        _destinations = destinations;
 
   @override
   Widget build(BuildContext context) {
-    const List<BottomNavigationBarItem> bottomNavigationBarItems = [
-      BottomNavigationBarItem(label: "Home", icon: Icon(Icons.home)),
-      BottomNavigationBarItem(
-          label: "Accounts", icon: Icon(Icons.account_balance)),
-      BottomNavigationBarItem(label: "Debts", icon: Icon(Icons.pending)),
-      BottomNavigationBarItem(label: "Settings", icon: Icon(Icons.settings)),
-    ];
-    const List<Widget> bodies = [
-      Placeholder(),
-      AccountsPage(),
-      Placeholder(),
-      SettingsPage(),
-    ];
-    assert(bottomNavigationBarItems.length == bodies.length);
-
-    final body = bodies[currentIndex];
-
-    return LayoutBuilder(
-        builder: (BuildContext context, BoxConstraints constraints) {
-      final bool verticalLayout =
-          0.9 * constraints.maxHeight > constraints.maxWidth;
-      return Scaffold(
-        appBar: AppBar(
-          title: Text(bottomNavigationBarItems[currentIndex].label!),
-        ),
-        body: verticalLayout
-            ? body
-            : Row(
-                children: [
-                  NavigationRail(
-                    destinations: [
-                      for (BottomNavigationBarItem item
-                          in bottomNavigationBarItems)
-                        NavigationRailDestination(
-                            icon: item.icon, label: Text(item.label!))
-                    ],
-                    selectedIndex: currentIndex,
-                    onDestinationSelected: changeIndex,
-                    labelType: NavigationRailLabelType.all,
-                    extended: false,
-                  ),
-                  Expanded(child: body),
-                ],
-              ),
-        bottomNavigationBar: verticalLayout
-            ? BottomNavigationBar(
-                currentIndex: currentIndex,
-                onTap: changeIndex,
-                items: bottomNavigationBarItems,
-                type: BottomNavigationBarType.fixed,
-              )
-            : null,
-      );
-    });
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(_destinations[_currentIndex].title),
+      ),
+      floatingActionButton: _destinations[_currentIndex].floatingActionButton,
+      body: verticalLayout
+          ? _destinations[_currentIndex].body
+          : Row(
+              children: [
+                NavigationRail(
+                  destinations: _navigationRailDestinations,
+                  selectedIndex: _currentIndex,
+                  onDestinationSelected: _changeIndex,
+                  labelType: NavigationRailLabelType.all,
+                  extended: false,
+                ),
+                Expanded(child: _destinations[_currentIndex].body),
+              ],
+            ),
+      bottomNavigationBar: verticalLayout
+          ? BottomNavigationBar(
+              currentIndex: _currentIndex,
+              onTap: _changeIndex,
+              items: _bottomNavigationBarItems,
+              type: BottomNavigationBarType.fixed,
+            )
+          : null,
+    );
   }
+}
+
+class _Destination {
+  final String title;
+  final Icon icon;
+  final Widget body;
+  final Widget? floatingActionButton;
+
+  const _Destination({
+    required this.title,
+    required this.icon,
+    required this.body,
+    required this.floatingActionButton,
+  });
 }

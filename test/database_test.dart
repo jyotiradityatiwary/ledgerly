@@ -1,9 +1,6 @@
 import 'dart:io';
 
-import 'package:flutter_test/flutter_test.dart';
 import 'package:ledgerly/services/app_manager.dart';
-import 'package:ledgerly/services/crud_services.dart';
-import 'package:ledgerly/services/database_manager.dart';
 import 'package:path/path.dart' as p;
 
 final basePath = p.join(Directory.systemTemp.path, appDirName);

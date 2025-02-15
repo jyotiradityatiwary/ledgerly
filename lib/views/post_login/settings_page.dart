@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ledgerly/notifiers/preferences_notifier.dart';
+import 'package:ledgerly/services/database_manager.dart';
 import 'package:provider/provider.dart';
 
 class SettingsPage extends StatelessWidget {
@@ -18,6 +19,17 @@ class SettingsPage extends StatelessWidget {
         },
         subtitle: Text("Return to the user selection screen"),
         leading: Icon(Icons.logout),
+      ),
+      ListTile(
+        title: Text("Debug Information"),
+        leading: Icon(Icons.bug_report),
+        onTap: () => showModalBottomSheet(
+          context: context,
+          builder: (context) => Padding(
+            padding: EdgeInsets.all(16.0),
+            child: Text("Database File location: $dbPath"),
+          ),
+        ),
       ),
     ];
     return Center(

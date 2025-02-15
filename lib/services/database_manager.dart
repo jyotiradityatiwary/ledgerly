@@ -3,7 +3,6 @@ import 'dart:io';
 
 import 'package:ledgerly/model/schemas.dart';
 import 'package:ledgerly/model/table_schema.dart';
-import 'package:ledgerly/services/crud_services.dart';
 import 'package:sqlite3/sqlite3.dart';
 import 'dart:developer' as developer;
 
@@ -29,6 +28,7 @@ Database get dbHandle {
 }
 
 late String _dbPath;
+String get dbPath => _dbPath;
 
 /// Initializes the db variable. Reads the databse (sqlite3) file from the
 /// given [path]. If the file does not exists, it will create the file and will

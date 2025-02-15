@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:ledgerly/notifiers/preferences_notifier.dart';
 import 'package:ledgerly/services/app_manager.dart';
 import 'package:ledgerly/views/login_checker.dart';
 import 'package:ledgerly/views/loading_screen.dart';
-import 'package:provider/provider.dart';
 
 /// Handles initialization and disposal of the app
 class AppInitializer extends StatefulWidget {
@@ -40,10 +38,7 @@ class _AppInitializerState extends State<AppInitializer> {
       onCompleted: (void _) {
         Navigator.of(context).push(
           MaterialPageRoute(
-            builder: (context) => ChangeNotifierProvider<PreferencesNotifier>(
-              create: (context) => PreferencesNotifier(),
-              child: LoginChecker(),
-            ),
+            builder: (context) => LoginChecker(),
           ),
         );
       },

@@ -1,4 +1,4 @@
-import 'package:ledgerly/model/crud_service.dart';
+import 'package:ledgerly/model/crud_services/crud_service.dart';
 import 'package:ledgerly/model/data_classes.dart';
 
 class UserCrudService extends CrudService<User> {

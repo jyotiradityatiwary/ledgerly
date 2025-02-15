@@ -7,13 +7,15 @@ import 'table_schema.dart';
 const accountSchema = TableSchema<Account>(
   tableName: 'Accounts',
   columns:
-      'account_id, user_id, initial_balance, current_balance, account_description',
-  insertPlaceholders: '?, ?, ?, ?, ?',
-  updateSetClauseWithoutId: '',
+      'account_id, name, user_id, initial_balance, current_balance, account_description',
+  insertPlaceholders: '?, ?, ?, ?, ?, ?',
+  updateSetClauseWithoutId:
+      'name = ?, initial_balance = ?, current_balance = ?, account_description = ?',
   primaryKeyColumn: 'account_id',
   createTableSql: '''
 CREATE TABLE Accounts (
   account_id INTEGER PRIMARY KEY,
+  name TEXT NOT NULL,
   user_id INTEGER NOT NULL REFERENCES Users(user_id),
   initial_balance INTEGER NOT NULL,
   current_balance INTEGER NOT NULL, -- derived
@@ -26,13 +28,15 @@ CREATE TABLE Accounts (
 
 Account _rowToAccount(final Row row) => Account(
       id: row.columnAt(0),
-      user: userCrudService.getById(row.columnAt(1)),
-      initialBalance: row.columnAt(2),
-      currentBalance: row.columnAt(3),
-      description: row.columnAt(4),
+      name: row.columnAt(1),
+      user: userCrudService.getById(row.columnAt(2)),
+      initialBalance: row.columnAt(3),
+      currentBalance: row.columnAt(4),
+      description: row.columnAt(5),
     );
 
 List<Object?> _accountToListWithoutId(final Account account) => [
+      account.name,
       account.user.id,
       account.initialBalance,
       account.currentBalance,

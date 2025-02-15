@@ -1,6 +1,6 @@
 import 'package:ledgerly/services/database_manager.dart';
 import 'package:sqlite3/sqlite3.dart';
-import 'table_schema.dart';
+import '../table_schema.dart';
 
 class CrudService<T> {
   final TableSchema<T> schema;
