@@ -13,7 +13,7 @@ const String appDirName = 'ledgerly';
 
 Future<String> getAppDirPath() async {
   final String documentsDirectoryPath =
-      (await getApplicationCacheDirectory()).path;
+      (await getApplicationDocumentsDirectory()).path;
   final String appDirPath = p.join(documentsDirectoryPath, appDirName);
   return appDirPath;
 }
@@ -24,6 +24,7 @@ Future<void> initializeApp() async {
   final String appDirPath = await getAppDirPath();
   if (!Directory(appDirPath).existsSync()) {
     Directory(appDirPath).createSync(recursive: true);
+    developer.log("App Directory Created");
   }
 
   initializeDatabase(path: p.join(appDirPath, 'db.sqlite3'));

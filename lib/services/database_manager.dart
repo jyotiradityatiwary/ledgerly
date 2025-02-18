@@ -38,10 +38,15 @@ void initializeDatabase({required String path}) {
   final File file = File(_dbPath);
 
   // open the databse in read/write mode. Create the databse file if required
-  _db = sqlite3.open(
-    _dbPath,
-    mode: file.existsSync() ? OpenMode.readWrite : OpenMode.readWriteCreate,
-  );
+  try {
+    _db = sqlite3.open(
+      _dbPath,
+      mode: file.existsSync() ? OpenMode.readWrite : OpenMode.readWriteCreate,
+    );
+  } catch (e) {
+    developer.log("failed to create databse");
+    rethrow;
+  }
 
   // initialize tables if required
   if (!_areTablesInitialized()) _initializeTables();
