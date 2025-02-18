@@ -78,8 +78,8 @@ enum TransactionType {
 
 class Transaction {
   final int id;
-  final Account sourceAccount;
-  final Account destinationAccount;
+  final Account? sourceAccount;
+  final Account? destinationAccount;
   final int amount;
   final String summary;
   final String? description;

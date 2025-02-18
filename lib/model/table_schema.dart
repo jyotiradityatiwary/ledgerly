@@ -1,3 +1,4 @@
+import 'package:ledgerly/model/data_classes.dart';
 import 'package:sqlite3/sqlite3.dart';
 
 class TableSchema<T> {
@@ -34,5 +35,24 @@ class TableSchema<T> {
     required this.createTableSql,
     required this.rowToItem,
     required this.itemToListWithoutId,
+  });
+}
+
+class AccountSchema extends TableSchema<Account> {
+  /// Used to update account balance on every transaction
+  final String updateBalanceAddClause;
+  final String updateBalanceSubtractClause;
+
+  const AccountSchema({
+    required super.tableName,
+    required super.columns,
+    required super.insertPlaceholders,
+    required super.updateSetClauseWithoutId,
+    required super.primaryKeyColumn,
+    required super.createTableSql,
+    required super.rowToItem,
+    required super.itemToListWithoutId,
+    required this.updateBalanceAddClause,
+    required this.updateBalanceSubtractClause,
   });
 }

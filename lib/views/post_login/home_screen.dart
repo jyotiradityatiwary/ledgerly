@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ledgerly/views/post_login/accounts_page.dart';
-import 'package:ledgerly/views/post_login/settings_page.dart';
+import 'package:ledgerly/views/post_login/settings.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -20,27 +20,21 @@ class _HomeScreenState extends State<HomeScreen> {
 
   static const List<_Destination> _destinations = [
     _Destination(
-      title: 'Home',
-      icon: Icon(Icons.home),
-      body: Placeholder(),
-      floatingActionButton: null,
-    ),
-    _Destination(
       title: 'Accounts',
-      icon: Icon(Icons.account_balance),
+      icon: Icon(Icons.payment),
       body: AccountsPage(),
       floatingActionButton: AccountsPageFAB(),
     ),
     _Destination(
-      title: 'Debts',
-      icon: Icon(Icons.pending),
+      title: 'Insights',
+      icon: Icon(Icons.insights),
       body: Placeholder(),
       floatingActionButton: null,
     ),
     _Destination(
-      title: 'Settings',
-      icon: Icon(Icons.settings),
-      body: SettingsPage(),
+      title: 'Dues',
+      icon: Icon(Icons.pending_actions),
+      body: Placeholder(),
       floatingActionButton: null,
     ),
   ];
@@ -100,6 +94,15 @@ class _Scaffold extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(_destinations[_currentIndex].title),
+        actions: [
+          IconButton(
+              onPressed: () {
+                Navigator.of(context).push(MaterialPageRoute(
+                  builder: (context) => SettingsScreen(),
+                ));
+              },
+              icon: Icon(Icons.settings))
+        ],
       ),
       floatingActionButton: _destinations[_currentIndex].floatingActionButton,
       body: verticalLayout

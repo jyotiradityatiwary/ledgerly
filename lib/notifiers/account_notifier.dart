@@ -10,12 +10,26 @@ class AccountNotifier with ChangeNotifier {
   bool _isLoaded = false;
   bool get isLoaded => _isLoaded;
 
+  List<Transaction> _transactions = [];
+  UnmodifiableListView<Transaction> get transactions =>
+      UnmodifiableListView(_transactions);
+
   AccountNotifier() {
-    _load();
+    _loadAllAndNotify();
   }
 
-  Future<void> _load() async {
+  Future<void> _loadAllAndNotify() async {
+    await _partialLoadAccounts();
+    await _partialLoadTransactions();
+    await _notifyLoad();
+  }
+
+  Future<void> _partialLoadAccounts() async {
     _accounts = accountCrudService.getAll();
+  }
+
+  Future<void> _partialLoadTransactions() async {
+    _transactions = transactionCrudService.getAll();
     await _notifyLoad();
   }
 
@@ -49,11 +63,54 @@ class AccountNotifier with ChangeNotifier {
     }
   }
 
+  // TODO: ensure that this account has no transactions. otherwise offer user an option to cascade and undo those transactions first
   Future<void> deleteAccount({required final int id}) async {
     await _notifyUnLoad();
     try {
       accountCrudService.delete(id);
       _accounts.removeWhere((account) => account.id == id);
+    } finally {
+      await _notifyLoad();
+    }
+  }
+
+  Future<void> createTransaction({
+    required Account? sourceAccount,
+    required Account? destinationAccount,
+    required int amount,
+    required String summary,
+    String? description,
+    required DateTime dateTime,
+  }) async {
+    await _notifyUnLoad();
+    try {
+      final int newId = transactionCrudService.create(
+        sourceAccount: sourceAccount,
+        destinationAccount: destinationAccount,
+        amount: amount,
+        summary: summary,
+        description: description,
+        dateTime: dateTime,
+      );
+      _transactions.add(transactionCrudService.getById(newId));
+
+      // reload accounts because balances will be changed
+      await _partialLoadAccounts();
+    } finally {
+      await _notifyLoad();
+    }
+  }
+
+  Future<void> undoTransaction({
+    required final Transaction transaction,
+  }) async {
+    await _notifyUnLoad();
+    try {
+      transactionCrudService.undo(transaction);
+      _transactions.removeWhere((item) => item.id == transaction.id);
+
+      // reload accounts because balances will be changed
+      await _partialLoadAccounts();
     } finally {
       await _notifyLoad();
     }

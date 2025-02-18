@@ -4,7 +4,7 @@ import 'package:sqlite3/sqlite3.dart';
 import 'data_classes.dart';
 import 'table_schema.dart';
 
-const accountSchema = TableSchema<Account>(
+const accountSchema = AccountSchema(
   tableName: 'Accounts',
   columns:
       'account_id, name, user_id, initial_balance, current_balance, account_description',
@@ -24,6 +24,8 @@ CREATE TABLE Accounts (
 ''',
   rowToItem: _rowToAccount,
   itemToListWithoutId: _accountToListWithoutId,
+  updateBalanceAddClause: 'current_balance = current_balance + ?',
+  updateBalanceSubtractClause: 'current_balance = current_balance - ?',
 );
 
 Account _rowToAccount(final Row row) => Account(
@@ -169,16 +171,16 @@ List<Object?> _transactionCategoryToListWithoutId(
 const transactionSchema = TableSchema<Transaction>(
   tableName: 'Transactions',
   columns:
-      'transaction_id, transaction_name, currency_precision, currency, cloud_transaction_id',
-  insertPlaceholders: '?, ?, ?, ?, ?',
+      'transaction_id, source_account_id, destination_account_id, amount, transaction_summary, transaction_description, transaction_datetime',
+  insertPlaceholders: '?, ?, ?, ?, ?, ?, ?',
   updateSetClauseWithoutId:
-      'transaction_name = ?, currency_precision = ?, currency = ?, cloud_transaction_id = ?',
+      'transaction_id = ?, source_account_id = ?, destination_account_id = ?, amount= ?, transaction_summary = ?, transaction_description = ?, transaction_datetime = ?',
   primaryKeyColumn: 'transaction_id',
   createTableSql: '''
 CREATE TABLE Transactions (
     transaction_id INTEGER PRIMARY KEY,
-    source_account_id INTEGER NOT NULL REFERENCES Accounts(account_id),
-    destination_account_id INTEGER NOT NULL REFERENCES Accounts(account_id),
+    source_account_id INTEGER DEFAULT NULL REFERENCES Accounts(account_id),
+    destination_account_id INTEGER DEFAULT NULL REFERENCES Accounts(account_id),
     amount INTEGER NOT NULL,
     transaction_summary TEXT NOT NULL,
     transaction_description TEXT DEFAULT NULL,
@@ -191,8 +193,12 @@ CREATE TABLE Transactions (
 
 Transaction _rowToTransaction(final Row row) => Transaction(
       id: row.columnAt(0),
-      sourceAccount: accountCrudService.getById(row.columnAt(1)),
-      destinationAccount: accountCrudService.getById(row.columnAt(2)),
+      sourceAccount: row.columnAt(1) == null
+          ? null
+          : accountCrudService.getById(row.columnAt(1)),
+      destinationAccount: row.columnAt(2) == null
+          ? null
+          : accountCrudService.getById(row.columnAt(2)),
       amount: row.columnAt(3),
       summary: row.columnAt(4),
       description: row.columnAt(5),
@@ -200,8 +206,8 @@ Transaction _rowToTransaction(final Row row) => Transaction(
     );
 
 List<Object?> _transactionToListWithoutId(final Transaction transaction) => [
-      transaction.sourceAccount.id,
-      transaction.destinationAccount.id,
+      transaction.sourceAccount?.id,
+      transaction.destinationAccount?.id,
       transaction.amount,
       transaction.summary,
       transaction.description,

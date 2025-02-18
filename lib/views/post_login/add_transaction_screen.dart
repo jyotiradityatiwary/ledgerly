@@ -1,13 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:ledgerly/model/data_classes.dart';
 import 'package:ledgerly/notifiers/account_notifier.dart';
 import 'package:ledgerly/notifiers/preferences_notifier.dart';
+import 'package:ledgerly/services/crud_services.dart';
 import 'package:ledgerly/views/reusable/form_fields.dart';
 import 'package:provider/provider.dart';
 
 class _FormData {
-  String name = '';
-  int initialBalance = 0;
+  Account? sourceAccount;
+  Account? destinationAccount;
+  int amount = 0;
+  String summary = "";
   String? description;
+  DateTime dateTime = DateTime.now();
 
   void submit(
     final BuildContext context,
@@ -17,18 +22,23 @@ class _FormData {
 
     // if validated
     formKey.currentState!.save();
-    Provider.of<AccountNotifier>(context, listen: false).addAccount(
-      name: name,
-      user: Provider.of<PreferencesNotifier>(context, listen: false).user!,
-      initialBalance: initialBalance,
+    Provider.of<AccountNotifier>(
+      context,
+      listen: false,
+    ).createTransaction(
+      sourceAccount: sourceAccount,
+      destinationAccount: destinationAccount,
+      amount: amount,
+      summary: summary,
+      dateTime: dateTime,
       description: description,
     );
     Navigator.of(context).pop();
   }
 }
 
-class AddAccountScreen extends StatelessWidget {
-  AddAccountScreen({super.key});
+class AddTransactionScreen extends StatelessWidget {
+  AddTransactionScreen({super.key});
 
   final _formKey = GlobalKey<FormState>();
   final _formData = _FormData();
@@ -36,18 +46,34 @@ class AddAccountScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final user = Provider.of<PreferencesNotifier>(context).user!;
+
     final List<Widget> children = [
       NameFormField(
-        label: 'Account Name',
+        label: 'Summary',
         onFieldSubmitted: (value) => _formData.submit(context, _formKey),
-        onSaved: (newValue) => _formData.name = newValue,
+        onSaved: (newValue) => _formData.summary = newValue,
       ),
       CurrencyInputFormField(
-        label: 'Initial Balance',
-        onSaveAmount: (newAmount) => _formData.initialBalance = newAmount,
-        onFieldSubmitted: (value) => _formData.submit(context, _formKey),
+        label: 'Amount',
+        onSaveAmount: (amount) {
+          _formData.amount = amount;
+        },
+        onFieldSubmitted: (value) {
+          _formData.submit(context, _formKey);
+        },
         currencyPrecision: user.currencyPrecision,
         currency: user.currency,
+      ),
+      TransactionAccountFormField(
+        onSaved: (newValue) {
+          assert(newValue != null);
+          _formData.sourceAccount = newValue!.sourceAccountId == null
+              ? null
+              : accountCrudService.getById(newValue.sourceAccountId!);
+          _formData.destinationAccount = newValue.destinationAccountId == null
+              ? null
+              : accountCrudService.getById(newValue.destinationAccountId!);
+        },
       ),
       DescriptionFormField(
         label: 'Description',
@@ -55,12 +81,13 @@ class AddAccountScreen extends StatelessWidget {
         onSaved: (newValue) => _formData.description = newValue,
       ),
     ];
+
     return Form(
       key: _formKey,
       child: Scaffold(
         appBar: AppBar(
           title: Text(
-            'Add a new account',
+            'Add a new transaction',
           ),
         ),
         floatingActionButton: FloatingActionButton.extended(
@@ -75,12 +102,12 @@ class AddAccountScreen extends StatelessWidget {
               padding: const EdgeInsets.all(16),
               child: ListView.separated(
                 shrinkWrap: true,
+                padding: EdgeInsets.only(bottom: 80),
                 itemBuilder: (context, index) => children[index],
                 itemCount: children.length,
                 separatorBuilder: (context, index) => SizedBox.fromSize(
                   size: Size.fromHeight(16),
                 ),
-                padding: EdgeInsets.only(bottom: 80),
               ),
             ),
           ),
