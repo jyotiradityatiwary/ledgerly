@@ -43,8 +43,9 @@ void initializeDatabase({required String path}) {
       _dbPath,
       mode: file.existsSync() ? OpenMode.readWrite : OpenMode.readWriteCreate,
     );
+    _db!.execute('PRAGMA foreign_keys = ON;');
   } catch (e) {
-    developer.log("failed to create databse");
+    developer.log("failed to open databse");
     rethrow;
   }
 

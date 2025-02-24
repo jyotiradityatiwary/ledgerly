@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ledgerly/model/data_classes.dart';
 import 'package:ledgerly/notifiers/account_notifier.dart';
 import 'package:ledgerly/notifiers/preferences_notifier.dart';
 import 'package:ledgerly/views/post_login/add_account_screen.dart';
@@ -114,7 +115,7 @@ class _AccountListView extends StatelessWidget {
               Text(
                 formatCurrency(
                   magnitude: account.currentBalance,
-                  precision: user.currencyPrecision,
+                  maxPrecision: user.currencyPrecision,
                   currency: user.currency,
                 ),
                 style: Theme.of(context).textTheme.bodyMedium,
@@ -124,13 +125,71 @@ class _AccountListView extends StatelessWidget {
           subtitle:
               account.description == null ? null : Text(account.description!),
           trailing: IconButton(
-            onPressed: () {
-              accountNotifier.deleteAccount(id: account.id);
+            onPressed: () async {
+              final bool hasTransactions =
+                  await accountNotifier.hasTransactions(account.id);
+              final bool canDelete = !hasTransactions;
+              if (canDelete) {
+                accountNotifier.deleteAccount(id: account.id);
+              } else if (context.mounted) {
+                showAdaptiveDialog(
+                  context: context,
+                  builder: (context) =>
+                      _ShouldDeleteAccountWithTransactionsDialog(
+                    accountNotifier: accountNotifier,
+                    account: account,
+                  ),
+                );
+              }
             },
             icon: Icon(Icons.delete),
           ),
         );
       },
+    );
+  }
+}
+
+class _ShouldDeleteAccountWithTransactionsDialog extends StatelessWidget {
+  const _ShouldDeleteAccountWithTransactionsDialog({
+    required this.accountNotifier,
+    required this.account,
+  });
+
+  final AccountNotifier accountNotifier;
+  final Account account;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return AlertDialog.adaptive(
+      title: Text('Warning'),
+      content: Container(
+        constraints: BoxConstraints(
+          maxWidth: 600,
+        ),
+        child: Text(
+          'This acount has transactions associated to it.\n\nIf you continue to delete this account, all transactions that are linked to this account will also be deleted.',
+          softWrap: true,
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text('Cancel'),
+        ),
+        TextButton(
+          onPressed: () {
+            accountNotifier.deleteAccountWithAssociatedTransactions(
+                accountId: account.id);
+            Navigator.of(context).pop();
+          },
+          style: TextButton.styleFrom(
+            foregroundColor: theme.colorScheme.error,
+          ),
+          child: Text('Continue'),
+        )
+      ],
     );
   }
 }
@@ -141,13 +200,50 @@ class AccountsPageFAB extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return FloatingActionButton.extended(
-      onPressed: () {
-        Navigator.of(context).push(MaterialPageRoute(
-          builder: (context) => AddTransactionScreen(),
-        ));
+      onPressed: () async {
+        if (Provider.of<AccountNotifier>(context, listen: false)
+            .accounts
+            .isEmpty) {
+          final bool shouldAddAccountNow = await showDialog<bool>(
+                context: context,
+                builder: (context) => _AddAccountFirstDialog(),
+              ) ??
+              false;
+          if (shouldAddAccountNow && context.mounted) {
+            Navigator.of(context).push(MaterialPageRoute(
+              builder: (context) => AddAccountScreen(),
+            ));
+          }
+        } else {
+          Navigator.of(context).push(MaterialPageRoute(
+            builder: (context) => AddTransactionScreen(),
+          ));
+        }
       },
       label: Text('New Transaction'),
       icon: Icon(Icons.create),
+    );
+  }
+}
+
+class _AddAccountFirstDialog extends StatelessWidget {
+  const _AddAccountFirstDialog();
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      content: Text(
+          'An account is needed to add transactions. Would you like to add an account now?'),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop<bool>(false),
+          child: Text('Later'),
+        ),
+        TextButton(
+          onPressed: () => Navigator.of(context).pop<bool>(true),
+          child: Text('Add Account'),
+        ),
+      ],
     );
   }
 }

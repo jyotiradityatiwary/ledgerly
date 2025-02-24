@@ -19,18 +19,17 @@ class AccountNotifier with ChangeNotifier {
   }
 
   Future<void> _loadAllAndNotify() async {
-    await _partialLoadAccounts();
-    await _partialLoadTransactions();
+    await _fetchAccounts();
+    await _fetchTransactions();
     await _notifyLoad();
   }
 
-  Future<void> _partialLoadAccounts() async {
+  Future<void> _fetchAccounts() async {
     _accounts = accountCrudService.getAll();
   }
 
-  Future<void> _partialLoadTransactions() async {
+  Future<void> _fetchTransactions() async {
     _transactions = transactionCrudService.getAll();
-    await _notifyLoad();
   }
 
   Future<void> _notifyLoad() async {
@@ -63,12 +62,29 @@ class AccountNotifier with ChangeNotifier {
     }
   }
 
-  // TODO: ensure that this account has no transactions. otherwise offer user an option to cascade and undo those transactions first
+  Future<bool> hasTransactions(int accountId) async {
+    return accountCrudService.hasTransactions(accountId: accountId);
+  }
+
   Future<void> deleteAccount({required final int id}) async {
     await _notifyUnLoad();
     try {
       accountCrudService.delete(id);
       _accounts.removeWhere((account) => account.id == id);
+    } finally {
+      await _notifyLoad();
+    }
+  }
+
+  Future<void> deleteAccountWithAssociatedTransactions({
+    required final int accountId,
+  }) async {
+    await _notifyUnLoad();
+    try {
+      accountCrudService.deleteTransactionsFor(accountId: accountId);
+      await _fetchTransactions();
+      accountCrudService.delete(accountId);
+      _accounts.removeWhere((final Account account) => account.id == accountId);
     } finally {
       await _notifyLoad();
     }
@@ -95,7 +111,7 @@ class AccountNotifier with ChangeNotifier {
       _transactions.add(transactionCrudService.getById(newId));
 
       // reload accounts because balances will be changed
-      await _partialLoadAccounts();
+      await _fetchAccounts();
     } finally {
       await _notifyLoad();
     }
@@ -110,7 +126,7 @@ class AccountNotifier with ChangeNotifier {
       _transactions.removeWhere((item) => item.id == transaction.id);
 
       // reload accounts because balances will be changed
-      await _partialLoadAccounts();
+      await _fetchAccounts();
     } finally {
       await _notifyLoad();
     }

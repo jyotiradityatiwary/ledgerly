@@ -57,7 +57,7 @@ class TransactionsListView extends StatelessWidget {
                   child: Text(
                     formatCurrency(
                       magnitude: transaction.amount,
-                      precision: user.currencyPrecision,
+                      maxPrecision: user.currencyPrecision,
                       currency: user.currency,
                     ),
                     style: Theme.of(context).textTheme.bodyMedium,

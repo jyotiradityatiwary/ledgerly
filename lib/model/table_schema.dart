@@ -56,3 +56,21 @@ class AccountSchema extends TableSchema<Account> {
     required this.updateBalanceSubtractClause,
   });
 }
+
+class TransactionSchema extends TableSchema<Transaction> {
+  final String sourceAccountIdColumn;
+  final String destinationAccountIdColumn;
+
+  const TransactionSchema({
+    required super.tableName,
+    required super.columns,
+    required super.insertPlaceholders,
+    required super.updateSetClauseWithoutId,
+    required super.primaryKeyColumn,
+    required super.createTableSql,
+    required super.rowToItem,
+    required super.itemToListWithoutId,
+    required this.sourceAccountIdColumn,
+    required this.destinationAccountIdColumn,
+  });
+}

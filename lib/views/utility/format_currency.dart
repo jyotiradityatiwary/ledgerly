@@ -2,7 +2,11 @@ import 'dart:math' as math;
 
 String formatCurrency({
   required final int magnitude,
-  required final int precision,
+  required final int maxPrecision,
   required final String currency,
-}) =>
-    '$currency ${magnitude.toDouble() / math.pow(10, precision)}';
+}) {
+  final int displayPrecision = maxPrecision - 1;
+  final double displayValue =
+      magnitude.toDouble() / math.pow(10.0, displayPrecision);
+  return '$currency $displayValue';
+}

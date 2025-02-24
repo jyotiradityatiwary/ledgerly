@@ -168,7 +168,7 @@ List<Object?> _transactionCategoryToListWithoutId(
       category.description,
     ];
 
-const transactionSchema = TableSchema<Transaction>(
+const transactionSchema = TransactionSchema(
   tableName: 'Transactions',
   columns:
       'transaction_id, source_account_id, destination_account_id, amount, transaction_summary, transaction_description, transaction_datetime',
@@ -189,6 +189,8 @@ CREATE TABLE Transactions (
 ''',
   rowToItem: _rowToTransaction,
   itemToListWithoutId: _transactionToListWithoutId,
+  sourceAccountIdColumn: 'source_account_id',
+  destinationAccountIdColumn: 'destination_account_id',
 );
 
 Transaction _rowToTransaction(final Row row) => Transaction(
