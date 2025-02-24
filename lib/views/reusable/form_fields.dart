@@ -264,20 +264,6 @@ class _TransactionAccountFormFieldState
                     selectedType == TransactionType.internalTransfer
                 ? [
                     AccountPicker(
-                      key: sourceAccountPickerKey,
-                      label: 'Source Account',
-                      errorText: sourceAccountPickerErrorText,
-                      onSelected: (value) => field.didChange(
-                        field.value!.copyWithSourceAccountId(value),
-                      ),
-                    ),
-                  ]
-                : [];
-        final List<Widget> conditionalDestinationAccountField =
-            selectedType == TransactionType.outgoing ||
-                    selectedType == TransactionType.internalTransfer
-                ? [
-                    AccountPicker(
                       key: destinationAccountPickerKey,
                       label: 'Destination Account',
                       errorText: destinationAccountPickerErrorText,
@@ -285,6 +271,20 @@ class _TransactionAccountFormFieldState
                         field.value!.copyWithDestinationAccountId(value),
                       ),
                     )
+                  ]
+                : [];
+        final List<Widget> conditionalDestinationAccountField =
+            selectedType == TransactionType.outgoing ||
+                    selectedType == TransactionType.internalTransfer
+                ? [
+                    AccountPicker(
+                      key: sourceAccountPickerKey,
+                      label: 'Source Account',
+                      errorText: sourceAccountPickerErrorText,
+                      onSelected: (value) => field.didChange(
+                        field.value!.copyWithSourceAccountId(value),
+                      ),
+                    ),
                   ]
                 : [];
         return Column(
@@ -311,14 +311,14 @@ class _TransactionAccountFormFieldState
         // will be visible
         bool error = false;
 
-        final bool wantSource = value.type == TransactionType.incoming ||
+        final bool wantSource = value.type == TransactionType.outgoing ||
             value.type == TransactionType.internalTransfer;
         if (wantSource && value.sourceAccountId == null) {
           setSourceAccountPickerErrorText('Please select a source account.');
           error = true;
         }
 
-        final bool wantDestination = value.type == TransactionType.outgoing ||
+        final bool wantDestination = value.type == TransactionType.incoming ||
             value.type == TransactionType.internalTransfer;
         if (wantDestination && value.destinationAccountId == null) {
           setDestinationAccountPickerErrorText(
