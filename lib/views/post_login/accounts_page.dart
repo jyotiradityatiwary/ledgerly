@@ -99,53 +99,41 @@ class _AccountListView extends StatelessWidget {
   Widget build(BuildContext context) {
     final user = Provider.of<PreferencesNotifier>(context).user!;
 
-    return ListView.separated(
-      shrinkWrap: true,
-      physics: ClampingScrollPhysics(),
-      itemCount: accountNotifier.accounts.length,
-      separatorBuilder: (context, index) => SizedBox(
-        height: 8,
-      ),
-      itemBuilder: (context, idx) {
-        final account = accountNotifier.accounts[idx];
-        return ListTile(
-          title: Row(
-            children: [
-              Expanded(child: Text(account.name)),
-              Text(
-                formatCurrency(
-                  magnitude: account.currentBalance,
-                  maxPrecision: user.currencyPrecision,
-                  currency: user.currency,
-                ),
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-            ],
-          ),
-          subtitle:
-              account.description == null ? null : Text(account.description!),
-          trailing: IconButton(
-            onPressed: () async {
-              final bool hasTransactions =
-                  await accountNotifier.hasTransactions(account.id);
-              final bool canDelete = !hasTransactions;
-              if (canDelete) {
-                accountNotifier.deleteAccount(id: account.id);
-              } else if (context.mounted) {
-                showAdaptiveDialog(
-                  context: context,
-                  builder: (context) =>
-                      _ShouldDeleteAccountWithTransactionsDialog(
-                    accountNotifier: accountNotifier,
-                    account: account,
+    return SizedBox(
+      height: 100,
+      child: ListView.separated(
+        shrinkWrap: true,
+        physics: ClampingScrollPhysics(),
+        itemCount: accountNotifier.accounts.length,
+        scrollDirection: Axis.horizontal,
+        separatorBuilder: (context, index) => SizedBox(
+          width: 8,
+        ),
+        itemBuilder: (context, idx) {
+          final account = accountNotifier.accounts[idx];
+          return SizedBox(
+            width: 150,
+            child: Card(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                spacing: 8,
+                children: [
+                  Text(
+                    account.name,
+                    style: Theme.of(context).textTheme.titleMedium,
                   ),
-                );
-              }
-            },
-            icon: Icon(Icons.delete),
-          ),
-        );
-      },
+                  Text(formatCurrency(
+                    magnitude: account.currentBalance,
+                    maxPrecision: user.currencyPrecision,
+                    currency: user.currency,
+                  ))
+                ],
+              ),
+            ),
+          );
+        },
+      ),
     );
   }
 }
