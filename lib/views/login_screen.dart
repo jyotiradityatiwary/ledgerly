@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ledgerly/model/data_classes.dart';
 import 'package:ledgerly/notifiers/preferences_notifier.dart';
 import 'package:ledgerly/view_models/login_screen.dart';
 import 'package:ledgerly/views/add_user_screen.dart';
@@ -71,13 +72,60 @@ class _UserListView extends StatelessWidget {
           },
           trailing: IconButton(
             onPressed: () {
-              viewModel.deleteUser(user.id);
+              showAdaptiveDialog(
+                context: context,
+                builder: (context) => _AccountDeletionConfirmationDialog(
+                  viewModel: viewModel,
+                  user: user,
+                ),
+              );
             },
             icon: Icon(Icons.delete),
           ),
         );
       },
       padding: EdgeInsets.only(bottom: 80),
+    );
+  }
+}
+
+class _AccountDeletionConfirmationDialog extends StatelessWidget {
+  const _AccountDeletionConfirmationDialog({
+    required this.viewModel,
+    required this.user,
+  });
+
+  final LoginScreenViewModel viewModel;
+  final User user;
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog.adaptive(
+      title: Text('Warning'),
+      content: Container(
+        constraints: BoxConstraints(
+          maxWidth: 600,
+        ),
+        child: Text(
+          'Deleting this user will delete all data (accounts, transactions, budgets, dues, cloud login details, etc) for this user. Do you want to continue?',
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text('Cancel'),
+        ),
+        TextButton(
+          onPressed: () {
+            viewModel.deleteUser(user.id);
+            Navigator.of(context).pop();
+          },
+          style: TextButton.styleFrom(
+            foregroundColor: Theme.of(context).colorScheme.error,
+          ),
+          child: Text('Continue'),
+        )
+      ],
     );
   }
 }

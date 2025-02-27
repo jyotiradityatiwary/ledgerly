@@ -16,7 +16,7 @@ const accountSchema = AccountSchema(
 CREATE TABLE Accounts (
   account_id INTEGER PRIMARY KEY,
   name TEXT NOT NULL,
-  user_id INTEGER NOT NULL REFERENCES Users(user_id),
+  user_id INTEGER NOT NULL REFERENCES Users(user_id) ON DELETE CASCADE,
   initial_balance INTEGER NOT NULL,
   current_balance INTEGER NOT NULL, -- derived
   account_description TEXT DEFAULT NULL
@@ -26,6 +26,7 @@ CREATE TABLE Accounts (
   itemToListWithoutId: _accountToListWithoutId,
   updateBalanceAddClause: 'current_balance = current_balance + ?',
   updateBalanceSubtractClause: 'current_balance = current_balance - ?',
+  userIdForeignKeyColumn: 'user_id',
 );
 
 Account _rowToAccount(final Row row) => Account(
@@ -56,7 +57,7 @@ const budgetSchema = TableSchema<Budget>(
     createTableSql: '''
 CREATE TABLE Budgets (
     budget_id INTEGER PRIMARY KEY,
-    user_id INTEGER NOT NULL REFERENCES Users(user_id),
+    user_id INTEGER NOT NULL REFERENCES Users(user_id) ON DELETE CASCADE,
     category_id INTEGER NOT NULL REFERENCES TransactionCategories(category_id),
     budget_amount INTEGER NOT NULL,
     start_date_time INTEGER NOT NULL,
@@ -95,14 +96,15 @@ List<Object?> _budgetToListWithoutId(final Budget budget) => [
 const cloudUserSchema = TableSchema<CloudUser>(
   tableName: 'CloudUsers',
   columns:
-      'cloud_user_id, server_address, identifier, last_sync_date_time, login_expiry_date_time',
-  insertPlaceholders: '?, ?, ?, ?, ?',
+      'cloud_user_id, user_id, server_address, identifier, last_sync_date_time, login_expiry_date_time',
+  insertPlaceholders: '?, ?, ?, ?, ?, ?',
   updateSetClauseWithoutId:
-      'server_address = ?, identifier = ?, last_sync_date_time = ?, login_expiry_date_time = ?',
+      'user_id = ?, server_address = ?, identifier = ?, last_sync_date_time = ?, login_expiry_date_time = ?',
   primaryKeyColumn: 'cloud_user_id',
   createTableSql: '''
 CREATE TABLE CloudUsers (
   cloud_user_id INTEGER PRIMARY KEY,
+  user_id INTEGER NOT NULL UNIQUE REFERENCES Users(user_id) ON DELETE CASCADE,
   server_address TEXT NOT NULL,
   identifier TEXT NOT NULL,
   last_sync_date_time INTEGER NOT NULL,
@@ -115,13 +117,15 @@ CREATE TABLE CloudUsers (
 
 CloudUser _rowToCloudUser(final Row row) => CloudUser(
       id: row.columnAt(0),
-      serverAddress: row.columnAt(1),
-      identifier: row.columnAt(2),
-      lastSyncDateTime: DateTime.fromMillisecondsSinceEpoch(row.columnAt(3)),
-      loginExpiryDateTime: DateTime.fromMillisecondsSinceEpoch(row.columnAt(4)),
+      userId: row.columnAt(1),
+      serverAddress: row.columnAt(2),
+      identifier: row.columnAt(3),
+      lastSyncDateTime: DateTime.fromMillisecondsSinceEpoch(row.columnAt(4)),
+      loginExpiryDateTime: DateTime.fromMillisecondsSinceEpoch(row.columnAt(5)),
     );
 
 List<Object?> _cloudUserToListWithoutId(final CloudUser cloudUser) => [
+      cloudUser.userId,
       cloudUser.serverAddress,
       cloudUser.identifier,
       cloudUser.lastSyncDateTime.millisecondsSinceEpoch,
@@ -139,7 +143,7 @@ const transactionCategorySchema = TableSchema<TransactionCategory>(
   createTableSql: '''
 CREATE TABLE TransactionCategories (
   category_id INTEGER PRIMARY KEY,
-  user_id INTEGER NOT NULL REFERENCES Users(user_id),
+  user_id INTEGER NOT NULL REFERENCES Users(user_id) ON DELETE CASCADE,
   category_name TEXT NOT NULL,
   category_type INTEGER NOT NULL,
   category_description TEXT DEFAULT NULL
@@ -179,13 +183,54 @@ const transactionSchema = TransactionSchema(
   createTableSql: '''
 CREATE TABLE Transactions (
     transaction_id INTEGER PRIMARY KEY,
-    source_account_id INTEGER DEFAULT NULL REFERENCES Accounts(account_id),
-    destination_account_id INTEGER DEFAULT NULL REFERENCES Accounts(account_id),
+    source_account_id INTEGER DEFAULT NULL REFERENCES Accounts(account_id) ON DELETE CASCADE,
+    destination_account_id INTEGER DEFAULT NULL REFERENCES Accounts(account_id) ON DELETE CASCADE,
     amount INTEGER NOT NULL,
     transaction_summary TEXT NOT NULL,
     transaction_description TEXT DEFAULT NULL,
-    transaction_datetime INTEGER NOT NULL
+    transaction_datetime INTEGER NOT NULL,
+    
+    -- Ensure at least one of source_account_id or destination_account_id is NOT NULL
+    CONSTRAINT chk_at_least_one_account
+    CHECK (
+        (source_account_id IS NOT NULL) OR
+        (destination_account_id IS NOT NULL)
+    )
 );
+
+CREATE TRIGGER validate_transaction_account_users_on_insert
+BEFORE INSERT ON Transactions
+FOR EACH ROW
+WHEN (
+    -- Only check if both accounts are non-NULL
+    NEW.source_account_id IS NOT NULL AND
+    NEW.destination_account_id IS NOT NULL
+)
+BEGIN
+    SELECT RAISE(ABORT, 'Source/destination accounts must belong to the same user.')
+    WHERE (
+        SELECT user_id FROM Accounts WHERE account_id = NEW.source_account_id
+    ) != (
+        SELECT user_id FROM Accounts WHERE account_id = NEW.destination_account_id
+    );
+END;
+
+CREATE TRIGGER validate_transaction_account_users_on_update_account_ids
+BEFORE UPDATE OF source_accound_id, destination_account_id ON Transactions
+FOR EACH ROW
+WHEN (
+    -- Only check if both accounts are non-NULL
+    NEW.source_account_id IS NOT NULL AND
+    NEW.destination_account_id IS NOT NULL
+)
+BEGIN
+    SELECT RAISE(ABORT, 'Source/destination accounts must belong to the same user.')
+    WHERE (
+        SELECT user_id FROM Accounts WHERE account_id = NEW.source_account_id
+    ) != (
+        SELECT user_id FROM Accounts WHERE account_id = NEW.destination_account_id
+    );
+END;
 ''',
   rowToItem: _rowToTransaction,
   itemToListWithoutId: _transactionToListWithoutId,
@@ -218,18 +263,19 @@ List<Object?> _transactionToListWithoutId(final Transaction transaction) => [
 
 const userSchema = TableSchema<User>(
   tableName: 'Users',
-  columns: 'user_id, user_name, currency_precision, currency, cloud_user_id',
-  insertPlaceholders: '?, ?, ?, ?, ?',
+  columns: 'user_id, user_name, currency_precision, currency',
+  insertPlaceholders: '?, ?, ?, ?',
   updateSetClauseWithoutId:
-      'user_name = ?, currency_precision = ?, currency = ?, cloud_user_id = ?',
+      'user_name = ?, currency_precision = ?, currency = ?',
   primaryKeyColumn: 'user_id',
-  createTableSql: '''CREATE TABLE Users (
+  createTableSql: '''
+CREATE TABLE Users (
   user_id INTEGER PRIMARY KEY,
   user_name TEXT NOT NULL,
   currency_precision INT NOT NULL,
-  currency TEXT NOT NULL,
-  cloud_user_id INTEGER DEFAULT NULL UNIQUE REFERENCES CloudUsers(cloud_user_id)
-);''',
+  currency TEXT NOT NULL
+);
+''',
   rowToItem: _rowToUser,
   itemToListWithoutId: _userToListWithoutId,
 );
@@ -239,12 +285,10 @@ User _rowToUser(final Row row) => User(
       name: row.columnAt(1),
       currencyPrecision: row.columnAt(2),
       currency: row.columnAt(3),
-      cloudUser: row.columnAt(4),
     );
 
 List<Object?> _userToListWithoutId(final User user) => [
       user.name,
       user.currencyPrecision,
       user.currency,
-      user.cloudUser?.id,
     ];

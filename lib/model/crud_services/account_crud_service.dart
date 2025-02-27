@@ -5,11 +5,23 @@ import 'package:ledgerly/services/database_manager.dart';
 
 class AccountCrudService extends CrudService<Account> {
   final TransactionSchema transactionSchema;
+  final AccountSchema accountSchema;
 
   AccountCrudService(
-    super.schema, {
+    this.accountSchema, {
     required this.transactionSchema,
-  });
+  }) : super(accountSchema);
+
+  List<Account> getAllFor({required final int userId}) {
+    final String sql = '''
+      SELECT ${accountSchema.columns}
+      FROM ${accountSchema.tableName}
+      WHERE ${accountSchema.userIdForeignKeyColumn} = ?;
+    ''';
+    final List<Object?> args = [userId];
+    final results = dbHandle.select(sql, args);
+    return results.map(schema.rowToItem).toList();
+  }
 
   int create({
     required final String name,
@@ -40,15 +52,5 @@ class AccountCrudService extends CrudService<Account> {
     final int count = results.first.columnAt(0);
     assert(count == 0 || count == 1);
     return count == 1;
-  }
-
-  void deleteTransactionsFor({required final int accountId}) {
-    final String sql = '''
-      DELETE FROM ${transactionSchema.tableName}
-      WHERE ${transactionSchema.sourceAccountIdColumn} = ?
-      OR ${transactionSchema.destinationAccountIdColumn} = ?;
-    ''';
-    final List<Object?> args = [accountId, accountId];
-    dbHandle.execute(sql, args);
   }
 }

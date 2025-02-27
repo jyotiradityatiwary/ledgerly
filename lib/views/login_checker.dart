@@ -33,17 +33,22 @@ class LoginChecker extends StatelessWidget {
         builder: (context) => HomeScreen(),
       ),
     );
-    final homeScreenProvider = ChangeNotifierProvider<AccountNotifier>(
-      create: (context) => AccountNotifier(),
-      child: homeScreenNavigator,
-    );
 
     return ChangeNotifierProvider<PreferencesNotifier>(
       create: (context) => PreferencesNotifier(),
       child: Consumer<PreferencesNotifier>(
-        builder: (final context, final preferencesNotifier, final child) =>
-            preferencesNotifier.user == null ? loginViewModelProvider : child!,
-        child: homeScreenProvider,
+        builder: (final context, final preferencesNotifier, final _) {
+          final user = preferencesNotifier.user;
+          if (user == null) {
+            return loginViewModelProvider;
+          } else {
+            final homeScreenProvider = ChangeNotifierProvider<AccountNotifier>(
+              create: (context) => AccountNotifier(user: user),
+              child: homeScreenNavigator,
+            );
+            return homeScreenProvider;
+          }
+        },
       ),
     );
   }

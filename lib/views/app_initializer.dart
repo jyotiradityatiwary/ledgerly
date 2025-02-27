@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ledgerly/services/app_manager.dart';
+import 'package:ledgerly/views/error_screen.dart';
 import 'package:ledgerly/views/login_checker.dart';
 import 'package:ledgerly/views/loading_screen.dart';
 
@@ -39,6 +40,14 @@ class _AppInitializerState extends State<AppInitializer> {
         Navigator.of(context).push(
           MaterialPageRoute(
             builder: (context) => LoginChecker(),
+          ),
+        );
+      },
+      onError: (_) {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) =>
+                ErrorScreen(error: 'Failed to inilialize app'),
           ),
         );
       },

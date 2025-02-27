@@ -68,12 +68,17 @@ void _initializeTables() {
   final createAllTablesQueryString =
       _allSchema.map((schema) => schema.createTableSql).join('\n');
 
-  // create and open the database file
-  _db = sqlite3.open(_dbPath, mode: OpenMode.readWriteCreate);
-
   // initialize all tables in a single transaction
-  dbHandle.execute(createAllTablesQueryString);
-  developer.log("tables initialized");
+  dbHandle.execute('BEGIN;');
+  try {
+    dbHandle.execute(createAllTablesQueryString);
+    dbHandle.execute('COMMIT;');
+    developer.log("Database tables initialized");
+  } catch (error) {
+    developer.log('Failed to initialize databse tables.', error: error);
+    dbHandle.execute('ROLLBACK;');
+    rethrow;
+  }
 }
 
 void closeDatabase() {

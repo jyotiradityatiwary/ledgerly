@@ -14,22 +14,27 @@ class AccountNotifier with ChangeNotifier {
   UnmodifiableListView<Transaction> get transactions =>
       UnmodifiableListView(_transactions);
 
-  AccountNotifier() {
+  final User _user;
+
+  AccountNotifier({required User user}) : _user = user {
     _loadAllAndNotify();
   }
 
   Future<void> _loadAllAndNotify() async {
-    await _fetchAccounts();
-    await _fetchTransactions();
-    await _notifyLoad();
+    try {
+      await _fetchAccounts();
+      await _fetchTransactions();
+    } finally {
+      await _notifyLoad();
+    }
   }
 
   Future<void> _fetchAccounts() async {
-    _accounts = accountCrudService.getAll();
+    _accounts = accountCrudService.getAllFor(userId: _user.id);
   }
 
   Future<void> _fetchTransactions() async {
-    _transactions = transactionCrudService.getAll();
+    _transactions = transactionCrudService.getAllFor(userId: _user.id);
   }
 
   Future<void> _notifyLoad() async {
@@ -81,9 +86,8 @@ class AccountNotifier with ChangeNotifier {
   }) async {
     await _notifyUnLoad();
     try {
-      accountCrudService.deleteTransactionsFor(accountId: accountId);
-      await _fetchTransactions();
       accountCrudService.delete(accountId);
+      await _fetchTransactions();
       _accounts.removeWhere((final Account account) => account.id == accountId);
     } finally {
       await _notifyLoad();

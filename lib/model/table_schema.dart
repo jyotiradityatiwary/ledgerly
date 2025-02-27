@@ -42,6 +42,7 @@ class AccountSchema extends TableSchema<Account> {
   /// Used to update account balance on every transaction
   final String updateBalanceAddClause;
   final String updateBalanceSubtractClause;
+  final String userIdForeignKeyColumn;
 
   const AccountSchema({
     required super.tableName,
@@ -54,6 +55,7 @@ class AccountSchema extends TableSchema<Account> {
     required super.itemToListWithoutId,
     required this.updateBalanceAddClause,
     required this.updateBalanceSubtractClause,
+    required this.userIdForeignKeyColumn,
   });
 }
 

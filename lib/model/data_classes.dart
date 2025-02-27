@@ -41,6 +41,7 @@ class Budget {
 
 class CloudUser {
   final int id;
+  final int userId;
   final String serverAddress;
   final String identifier;
   final DateTime lastSyncDateTime;
@@ -48,6 +49,7 @@ class CloudUser {
 
   const CloudUser({
     required this.id,
+    required this.userId,
     required this.serverAddress,
     required this.identifier,
     required this.lastSyncDateTime,
@@ -100,13 +102,11 @@ class User {
   final String name;
   final int currencyPrecision;
   final String currency;
-  final CloudUser? cloudUser;
 
   const User({
     required this.id,
     required this.name,
     required this.currencyPrecision,
     required this.currency,
-    required this.cloudUser,
   });
 }

@@ -14,6 +14,5 @@ class UserCrudService extends CrudService<User> {
         name: name,
         currencyPrecision: currencyPrecision,
         currency: currency,
-        cloudUser: null,
       ));
 }
