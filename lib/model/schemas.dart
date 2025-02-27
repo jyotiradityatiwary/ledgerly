@@ -216,7 +216,7 @@ BEGIN
 END;
 
 CREATE TRIGGER validate_transaction_account_users_on_update_account_ids
-BEFORE UPDATE OF source_accound_id, destination_account_id ON Transactions
+BEFORE UPDATE OF source_account_id, destination_account_id ON Transactions
 FOR EACH ROW
 WHEN (
     -- Only check if both accounts are non-NULL
@@ -230,6 +230,60 @@ BEGIN
     ) != (
         SELECT user_id FROM Accounts WHERE account_id = NEW.destination_account_id
     );
+END;
+
+CREATE TRIGGER update_account_balance_on_insert
+AFTER INSERT ON Transactions
+FOR EACH ROW
+BEGIN
+    -- subtract from new source account
+    UPDATE Accounts
+    SET current_balance = current_balance - NEW.amount
+    WHERE account_id = NEW.source_account_id;
+
+    -- add to new destination account
+    UPDATE Accounts
+    SET current_balance = current_balance + NEW.amount
+    WHERE account_id = NEW.destination_account_id;
+END;
+
+CREATE TRIGGER update_account_balance_on_update
+AFTER UPDATE OF source_account_id, destination_account_id, amount
+ON Transactions
+BEGIN
+    -- add back from old source account
+    UPDATE Accounts
+    SET current_balance = current_balance + OLD.amount
+    WHERE account_id = OLD.source_account_id;
+
+    -- subtract back from old destination account
+    UPDATE Accounts
+    SET current_balance = current_balance - OLD.amount
+    WHERE account_id = OLD.destination_account_id;
+
+    -- subtract from new source account
+    UPDATE Accounts
+    SET current_balance = current_balance - NEW.amount
+    WHERE account_id = NEW.source_account_id;
+
+    -- add to new destination account
+    UPDATE Accounts
+    SET current_balance = current_balance + NEW.amount
+    WHERE account_id = NEW.destination_account_id;
+END;
+
+CREATE TRIGGER update_account_balance_on_delete
+AFTER DELETE ON Transactions
+BEGIN
+    -- add back from old source account
+    UPDATE Accounts
+    SET current_balance = current_balance + OLD.amount
+    WHERE account_id = OLD.source_account_id;
+
+    -- subtract back from old destination account
+    UPDATE Accounts
+    SET current_balance = current_balance - OLD.amount
+    WHERE account_id = OLD.destination_account_id;
 END;
 ''',
   rowToItem: _rowToTransaction,

@@ -122,12 +122,12 @@ class AccountNotifier with ChangeNotifier {
   }
 
   Future<void> undoTransaction({
-    required final Transaction transaction,
+    required final int transactionId,
   }) async {
     await _notifyUnLoad();
     try {
-      transactionCrudService.undo(transaction);
-      _transactions.removeWhere((item) => item.id == transaction.id);
+      transactionCrudService.delete(transactionId);
+      _transactions.removeWhere((item) => item.id == transactionId);
 
       // reload accounts because balances will be changed
       await _fetchAccounts();
