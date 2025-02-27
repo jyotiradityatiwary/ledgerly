@@ -1,8 +1,9 @@
+import 'package:ledgerly/model/data_classes.dart';
 import 'package:ledgerly/services/database_manager.dart';
 import 'package:sqlite3/sqlite3.dart';
 import '../table_schema.dart';
 
-class CrudService<T> {
+class CrudService<T extends DatabaseObject> {
   final TableSchema<T> schema;
   const CrudService(this.schema);
 
@@ -66,7 +67,7 @@ class CrudService<T> {
       SET ${schema.updateSetClauseWithoutId}
       WHERE ${schema.primaryKeyColumn} = ?;
     ''';
-    dbHandle.execute(sql, schema.itemToListWithoutId(item));
+    dbHandle.execute(sql, schema.itemToListWithoutId(item) + [item.id]);
   }
 
   void delete(final int id) {

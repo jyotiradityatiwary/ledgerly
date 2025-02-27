@@ -1,35 +1,56 @@
 import 'package:flutter/material.dart';
+import 'package:ledgerly/model/data_classes.dart';
 import 'package:ledgerly/view_models/login_screen.dart';
+import 'package:ledgerly/views/reusable/form_fields.dart';
 import 'package:provider/provider.dart';
 
 class _FormData {
-  String name = "";
-  String currency = "";
+  String name;
+  String currency;
 
-  void submit(
-    final BuildContext context,
-    final GlobalKey<FormState> formKey,
-  ) {
-    if (!formKey.currentState!.validate()) return;
-
-    // if validated
-    formKey.currentState!.save();
-    Provider.of<LoginScreenViewModel>(context, listen: false).addUser(
-      name: name,
-      currency: currency,
-    );
-    Navigator.of(context).pop();
-  }
+  _FormData({
+    required this.name,
+    required this.currency,
+  });
 }
 
-class AddUserScreen extends StatelessWidget {
-  AddUserScreen({super.key});
+/// Form for creating a new user or modifying an existing user
+///
+/// If [user] is provided, the form will serve to modify that user, otherwise
+/// the form will create a new user upon submission.
+class AddOrModifyUserScreen extends StatelessWidget {
+  AddOrModifyUserScreen({
+    super.key,
+    User? user,
+  })  : _originalUserId = user?.id,
+        _formData = _FormData(
+          name: user?.name ?? '',
+          currency: user?.currency ?? '',
+        );
 
+  final int? _originalUserId;
+  final _FormData _formData;
   final _formKey = GlobalKey<FormState>();
-  final _formData = _FormData();
 
   @override
   Widget build(BuildContext context) {
+    void submit() {
+      if (!_formKey.currentState!.validate()) return;
+
+      // if validated
+      _formKey.currentState!.save();
+
+      final viewModel =
+          Provider.of<LoginScreenViewModel>(context, listen: false);
+      viewModel.createOrModifyUser(
+        originalUserId: _originalUserId,
+        name: _formData.name,
+        currency: _formData.currency,
+      );
+
+      Navigator.of(context).pop();
+    }
+
     return Form(
       key: _formKey,
       child: Scaffold(
@@ -39,7 +60,7 @@ class AddUserScreen extends StatelessWidget {
           ),
         ),
         floatingActionButton: FloatingActionButton.extended(
-          onPressed: () => _formData.submit(context, _formKey),
+          onPressed: submit,
           label: Text("Save"),
           icon: Icon(Icons.save),
         ),
@@ -53,70 +74,25 @@ class AddUserScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 spacing: 16,
                 children: [
-                  _NameFormField(formData: _formData, formKey: _formKey),
-                  _CurrencyFormField(formData: _formData, formKey: _formKey),
+                  NameFormField(
+                    label: 'Name',
+                    onFieldSubmitted: (value) => submit(),
+                    onSaved: (newValue) => _formData.name = newValue,
+                    autofocus: true,
+                    initialValue: _formData.name,
+                  ),
+                  NameFormField(
+                    label: 'Currency',
+                    onFieldSubmitted: (value) => submit(),
+                    onSaved: (newValue) => _formData.currency = newValue,
+                    initialValue: _formData.currency,
+                  )
                 ],
               ),
             ),
           ),
         ),
       ),
-    );
-  }
-}
-
-class _CurrencyFormField extends StatelessWidget {
-  const _CurrencyFormField({
-    required _FormData formData,
-    required GlobalKey<FormState> formKey,
-  })  : _formData = formData,
-        _formKey = formKey;
-
-  final _FormData _formData;
-  final GlobalKey<FormState> _formKey;
-
-  @override
-  Widget build(BuildContext context) {
-    return TextFormField(
-      decoration: InputDecoration(
-        border: OutlineInputBorder(),
-        label: Text("Enter Currency Symbol"),
-      ),
-      onFieldSubmitted: (final String _) => _formData.submit(context, _formKey),
-      validator: (value) => value == null || value.isEmpty
-          ? "Please enter a currency symbol"
-          : null,
-      onSaved: (newValue) {
-        _formData.currency = newValue!;
-      },
-    );
-  }
-}
-
-class _NameFormField extends StatelessWidget {
-  const _NameFormField({
-    required _FormData formData,
-    required GlobalKey<FormState> formKey,
-  })  : _formData = formData,
-        _formKey = formKey;
-
-  final _FormData _formData;
-  final GlobalKey<FormState> _formKey;
-
-  @override
-  Widget build(BuildContext context) {
-    return TextFormField(
-      decoration: InputDecoration(
-        border: OutlineInputBorder(),
-        label: Text("Enter Name"),
-      ),
-      autofocus: true,
-      onFieldSubmitted: (final String _) => _formData.submit(context, _formKey),
-      validator: (value) =>
-          value == null || value.isEmpty ? "Please enter a name" : null,
-      onSaved: (newValue) {
-        _formData.name = newValue!;
-      },
     );
   }
 }

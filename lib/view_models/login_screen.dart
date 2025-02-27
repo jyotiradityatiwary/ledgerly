@@ -26,26 +26,42 @@ class LoginScreenViewModel with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> addUser({
+  static const int defaultCurrencyPrecision = 4;
+  Future<void> createOrModifyUser({
+    final int? originalUserId,
     required final String name,
     required final String currency,
   }) async {
-    const defaultCurrencyPrecision = 4;
-
     await _unLoad();
 
-    final userId = userCrudService.register(
-      name: name,
-      currencyPrecision: defaultCurrencyPrecision,
-      currency: currency,
-    );
-    developer.log(
-      'Registered new user (id = $userId) with name=$name, '
-      'currencyPrecision=$defaultCurrencyPrecision,'
-      ' currency=$currency',
-    );
-
-    await _load();
+    try {
+      if (originalUserId == null) {
+        final userId = userCrudService.register(
+          name: name,
+          currencyPrecision: defaultCurrencyPrecision,
+          currency: currency,
+        );
+        developer.log(
+          'Registered new user (id = $userId) with name=$name, '
+          'currencyPrecision=$defaultCurrencyPrecision,'
+          ' currency=$currency',
+        );
+      } else {
+        userCrudService.update(User(
+          id: originalUserId,
+          name: name,
+          currencyPrecision: defaultCurrencyPrecision,
+          currency: currency,
+        ));
+        _users.map(
+          (final User user) => user.id == originalUserId
+              ? userCrudService.getById(originalUserId)
+              : user,
+        );
+      }
+    } finally {
+      await _load();
+    }
   }
 
   Future<void> deleteUser(final int userId) async {

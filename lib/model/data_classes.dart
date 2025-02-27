@@ -1,4 +1,18 @@
-class Account {
+abstract class DatabaseObject {
+  int get id;
+
+  @override
+  bool operator ==(Object other) =>
+      runtimeType == other.runtimeType && id == (other as DatabaseObject).id;
+
+  @override
+  int get hashCode => id;
+
+  const DatabaseObject();
+}
+
+class Account extends DatabaseObject {
+  @override
   final int id;
   final String name;
   final User user;
@@ -15,7 +29,8 @@ class Account {
   });
 }
 
-class Budget {
+class Budget extends DatabaseObject {
+  @override
   final int id;
   final User user;
   final TransactionCategory category;
@@ -39,7 +54,8 @@ class Budget {
   });
 }
 
-class CloudUser {
+class CloudUser extends DatabaseObject {
+  @override
   final int id;
   final int userId;
   final String serverAddress;
@@ -57,7 +73,8 @@ class CloudUser {
   });
 }
 
-class TransactionCategory {
+class TransactionCategory extends DatabaseObject {
+  @override
   final int id;
   final User user;
   final String name;
@@ -78,7 +95,8 @@ enum TransactionType {
   internalTransfer,
 }
 
-class Transaction {
+class Transaction extends DatabaseObject {
+  @override
   final int id;
   final Account? sourceAccount;
   final Account? destinationAccount;
@@ -97,7 +115,8 @@ class Transaction {
   });
 }
 
-class User {
+class User extends DatabaseObject {
+  @override
   final int id;
   final String name;
   final int currencyPrecision;

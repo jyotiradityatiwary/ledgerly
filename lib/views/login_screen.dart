@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:ledgerly/model/data_classes.dart';
 import 'package:ledgerly/notifiers/preferences_notifier.dart';
 import 'package:ledgerly/view_models/login_screen.dart';
 import 'package:ledgerly/views/add_user_screen.dart';
@@ -17,7 +16,7 @@ class LoginScreen extends StatelessWidget {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => Navigator.of(context).push(MaterialPageRoute(
-          builder: (context) => AddUserScreen(),
+          builder: (context) => AddOrModifyUserScreen(),
         )),
         label: Text("New User"),
         icon: Icon(Icons.add),
@@ -55,6 +54,8 @@ class _UserListView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return ListView.separated(
       itemCount: viewModel.users.length,
       separatorBuilder: (context, index) => SizedBox(
@@ -70,17 +71,48 @@ class _UserListView extends StatelessWidget {
               listen: false,
             ).login(userId: user.id);
           },
-          trailing: IconButton(
-            onPressed: () {
-              showAdaptiveDialog(
-                context: context,
-                builder: (context) => _AccountDeletionConfirmationDialog(
-                  viewModel: viewModel,
-                  user: user,
+          trailing: MenuAnchor(
+            menuChildren: [
+              MenuItemButton(
+                onPressed: () {
+                  Navigator.of(context).push(MaterialPageRoute(
+                    builder: (context) => AddOrModifyUserScreen(
+                      user: user,
+                    ),
+                  ));
+                },
+                leadingIcon: Icon(Icons.edit),
+                child: Text(
+                  'Edit',
+                  style: theme.textTheme.bodyMedium,
                 ),
-              );
-            },
-            icon: Icon(Icons.delete),
+              ),
+              MenuItemButton(
+                onPressed: () {
+                  showAdaptiveDialog(
+                    context: context,
+                    builder: (context) => _AccountDeletionConfirmationDialog(
+                      userId: user.id,
+                    ),
+                  );
+                },
+                leadingIcon: Icon(
+                  Icons.delete,
+                  color: theme.colorScheme.error,
+                ),
+                child: Text(
+                  'Delete',
+                  style: theme.textTheme.bodyMedium!
+                      .copyWith(color: theme.colorScheme.error),
+                ),
+              ),
+            ],
+            builder: (context, controller, child) => IconButton(
+              onPressed: () =>
+                  controller.isOpen ? controller.close() : controller.open(),
+              icon: child!,
+            ),
+            child: Icon(Icons.more_vert),
           ),
         );
       },
@@ -91,12 +123,10 @@ class _UserListView extends StatelessWidget {
 
 class _AccountDeletionConfirmationDialog extends StatelessWidget {
   const _AccountDeletionConfirmationDialog({
-    required this.viewModel,
-    required this.user,
+    required this.userId,
   });
 
-  final LoginScreenViewModel viewModel;
-  final User user;
+  final int userId;
 
   @override
   Widget build(BuildContext context) {
@@ -117,7 +147,7 @@ class _AccountDeletionConfirmationDialog extends StatelessWidget {
         ),
         TextButton(
           onPressed: () {
-            viewModel.deleteUser(user.id);
+            Provider.of<LoginScreenViewModel>(context).deleteUser(userId);
             Navigator.of(context).pop();
           },
           style: TextButton.styleFrom(
