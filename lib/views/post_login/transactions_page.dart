@@ -72,27 +72,44 @@ class TransactionsListView extends StatelessWidget {
             formattedTime,
             // style: Theme.of(context).textTheme.bodyMedium,
           ),
-          trailing: Column(
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                switch (type) {
-                      TransactionType.incoming => '+ ',
-                      TransactionType.outgoing => '− ',
-                      TransactionType.internalTransfer => '⇆ '
-                    } +
-                    formattedAmount,
-                style: Theme.of(context).textTheme.titleMedium,
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        switch (type) {
+                              TransactionType.incoming => '+ ',
+                              TransactionType.outgoing => '− ',
+                              TransactionType.internalTransfer => '⇆ '
+                            } +
+                            formattedAmount,
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                    ],
+                  ),
+                  Text(
+                    switch (type) {
+                      TransactionType.incoming =>
+                        'to ${transaction.destinationAccount!.name}',
+                      TransactionType.outgoing =>
+                        'from ${transaction.sourceAccount!.name}',
+                      TransactionType.internalTransfer =>
+                        '${transaction.sourceAccount!.name} to ${transaction.destinationAccount!.name}'
+                    },
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                ],
               ),
-              Text(
-                switch (type) {
-                  TransactionType.incoming =>
-                    'to ${transaction.destinationAccount!.name}',
-                  TransactionType.outgoing =>
-                    'from ${transaction.sourceAccount!.name}',
-                  TransactionType.internalTransfer =>
-                    '${transaction.sourceAccount!.name} to ${transaction.destinationAccount!.name}'
-                },
-                style: Theme.of(context).textTheme.bodyMedium,
+              IconButton(
+                onPressed: () =>
+                    Provider.of<AccountNotifier>(context, listen: false)
+                        .undoTransaction(transactionId: transaction.id),
+                icon: Icon(Icons.undo),
               ),
             ],
           ),

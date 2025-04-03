@@ -35,7 +35,8 @@ class AccountsPage extends StatelessWidget {
                           IconButton(
                               onPressed: () {
                                 Navigator.of(context).push(MaterialPageRoute(
-                                  builder: (context) => AddAccountScreen(),
+                                  builder: (context) =>
+                                      AddOrModifyAccountScreen(),
                                 ));
                               },
                               icon: Icon(Icons.add))
@@ -113,7 +114,14 @@ class _AccountListView extends StatelessWidget {
           final account = accountNotifier.accounts[idx];
           return SizedBox(
             width: 150,
-            child: Card(
+            child: ElevatedButton(
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => AddOrModifyAccountScreen(
+                    account: account,
+                  ),
+                ),
+              ),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.center,
@@ -199,7 +207,7 @@ class AccountsPageFAB extends StatelessWidget {
               false;
           if (shouldAddAccountNow && context.mounted) {
             Navigator.of(context).push(MaterialPageRoute(
-              builder: (context) => AddAccountScreen(),
+              builder: (context) => AddOrModifyAccountScreen(),
             ));
           }
         } else {

@@ -1,58 +1,74 @@
 import 'package:flutter/material.dart';
+import 'package:ledgerly/model/data_classes.dart';
 import 'package:ledgerly/notifiers/account_notifier.dart';
 import 'package:ledgerly/notifiers/preferences_notifier.dart';
 import 'package:ledgerly/views/reusable/form_fields.dart';
 import 'package:provider/provider.dart';
 
 class _FormData {
-  String name = '';
-  int initialBalance = 0;
+  String name;
+  int initialBalance;
   String? description;
 
-  void submit(
-    final BuildContext context,
-    final GlobalKey<FormState> formKey,
-  ) {
-    if (!formKey.currentState!.validate()) return;
-
-    // if validated
-    formKey.currentState!.save();
-    Provider.of<AccountNotifier>(context, listen: false).addAccount(
-      name: name,
-      user: Provider.of<PreferencesNotifier>(context, listen: false).user!,
-      initialBalance: initialBalance,
-      description: description,
-    );
-    Navigator.of(context).pop();
-  }
+  _FormData({
+    required this.name,
+    required this.initialBalance,
+    this.description,
+  });
 }
 
-class AddAccountScreen extends StatelessWidget {
-  AddAccountScreen({super.key});
+class AddOrModifyAccountScreen extends StatelessWidget {
+  AddOrModifyAccountScreen({super.key, Account? account})
+      : _formData = _FormData(
+          name: account?.name ?? '',
+          initialBalance: account?.initialBalance ?? 0,
+          description: account?.description,
+        ),
+        _originalId = account?.id;
 
+  final int? _originalId;
   final _formKey = GlobalKey<FormState>();
-  final _formData = _FormData();
+  final _FormData _formData;
 
   @override
   Widget build(BuildContext context) {
+    void submit() {
+      if (!_formKey.currentState!.validate()) return;
+
+      // if validated
+      _formKey.currentState!.save();
+      Provider.of<AccountNotifier>(context, listen: false).addOrModifyAccount(
+        originalId: _originalId,
+        name: _formData.name,
+        user: Provider.of<PreferencesNotifier>(context, listen: false).user!,
+        initialBalance: _formData.initialBalance,
+        description: _formData.description,
+      );
+      Navigator.of(context).pop();
+    }
+
     final user = Provider.of<PreferencesNotifier>(context).user!;
     final List<Widget> children = [
       NameFormField(
         label: 'Account Name',
-        onFieldSubmitted: (value) => _formData.submit(context, _formKey),
+        onFieldSubmitted: (value) => submit(),
         onSaved: (newValue) => _formData.name = newValue,
+        autofocus: true,
+        initialValue: _formData.name,
       ),
       CurrencyInputFormField(
         label: 'Initial Balance',
         onSaveAmount: (newAmount) => _formData.initialBalance = newAmount,
-        onFieldSubmitted: (value) => _formData.submit(context, _formKey),
+        onFieldSubmitted: (value) => submit(),
         currencyPrecision: user.currencyPrecision,
         currency: user.currency,
+        initialValue: _formData.initialBalance,
       ),
       DescriptionFormField(
         label: 'Description',
-        onFieldSubmitted: (value) => _formData.submit(context, _formKey),
+        onFieldSubmitted: (value) => submit(),
         onSaved: (newValue) => _formData.description = newValue,
+        initialValue: _formData.description,
       ),
     ];
     return Form(
@@ -64,7 +80,7 @@ class AddAccountScreen extends StatelessWidget {
           ),
         ),
         floatingActionButton: FloatingActionButton.extended(
-          onPressed: () => _formData.submit(context, _formKey),
+          onPressed: () => submit(),
           label: Text("Save"),
           icon: Icon(Icons.save),
         ),

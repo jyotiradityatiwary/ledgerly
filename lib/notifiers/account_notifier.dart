@@ -47,7 +47,8 @@ class AccountNotifier with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> addAccount({
+  Future<void> addOrModifyAccount({
+    final int? originalId,
     required final String name,
     required final User user,
     required final int initialBalance,
@@ -55,13 +56,30 @@ class AccountNotifier with ChangeNotifier {
   }) async {
     await _notifyUnLoad();
     try {
-      final int newId = accountCrudService.create(
-        name: name,
-        user: user,
-        initialBalance: initialBalance,
-        description: description,
-      );
-      _accounts.add(accountCrudService.getById(newId));
+      if (originalId == null) {
+        final int newId = accountCrudService.create(
+          name: name,
+          user: user,
+          initialBalance: initialBalance,
+          description: description,
+        );
+        _accounts.add(accountCrudService.getById(newId));
+      } else {
+        // TODO: test
+        accountCrudService.modify(
+          originalId: originalId,
+          name: name,
+          user: user,
+          initialBalance: initialBalance,
+          description: description,
+        );
+
+        // update state
+        final idx = _accounts.indexWhere(
+          (element) => element.id == originalId,
+        );
+        _accounts[idx] = accountCrudService.getById(originalId);
+      }
     } finally {
       await _notifyLoad();
     }

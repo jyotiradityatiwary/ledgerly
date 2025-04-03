@@ -21,6 +21,15 @@ CREATE TABLE Accounts (
   current_balance INTEGER NOT NULL, -- derived
   account_description TEXT DEFAULT NULL
 );
+
+CREATE TRIGGER update_current_with_initial_balance
+AFTER UPDATE OF initial_balance ON Accounts
+FOR EACH ROW
+BEGIN
+    UPDATE Accounts
+    SET current_balance = OLD.current_balance - OLD.initial_balance + NEW.initial_balance
+    WHERE account_id = NEW.account_id;
+END;
 ''',
   rowToItem: _rowToAccount,
   itemToListWithoutId: _accountToListWithoutId,

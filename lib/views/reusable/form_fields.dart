@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:ledgerly/model/data_classes.dart';
 import 'package:ledgerly/notifiers/account_notifier.dart';
+import 'package:ledgerly/views/utility/format_currency.dart';
 import 'package:provider/provider.dart';
 
 class CurrencyInputFormField extends StatelessWidget {
@@ -23,7 +24,7 @@ class CurrencyInputFormField extends StatelessWidget {
   final int currencyPrecision;
   final String currency;
   final bool autofocus;
-  final String? initialValue;
+  final int? initialValue;
 
   final RegExp balanceRegex = RegExp(r'^(\+|-)?(\d*)\.?(\d*)$');
 
@@ -57,7 +58,13 @@ class CurrencyInputFormField extends StatelessWidget {
         signed: true,
       ),
       onFieldSubmitted: onFieldSubmitted,
-      initialValue: initialValue,
+      initialValue: initialValue == null
+          ? null
+          : formatCurrency(
+              magnitude: initialValue!,
+              maxPrecision: maxPrecision,
+              currency: null,
+            ),
       validator: (value) {
         if (value == null || value.isEmpty) {
           return "Please enter an amount.";

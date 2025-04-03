@@ -15,7 +15,8 @@ class PreferencesNotifier extends ChangeNotifier {
   }
 
   Future<void> _loadUser() async {
-    _user = Preferences.isSomeOneLoggedIn.value
+    _user = Preferences.isSomeOneLoggedIn.value &&
+            userCrudService.containsId(Preferences.currentUserId.value)
         ? userCrudService.getById(Preferences.currentUserId.value)
         : null;
     _isLoaded = true;

@@ -53,4 +53,31 @@ class AccountCrudService extends CrudService<Account> {
     assert(count == 0 || count == 1);
     return count == 1;
   }
+
+  @override
+  void update(Account item) {
+    throw UnimplementedError('Do not update directly. Use the modify function');
+  }
+
+  void modify({
+    required final int originalId,
+    required final String name,
+    required final User user,
+    required final int initialBalance,
+    required final String? description,
+  }) {
+    final String sql = '''
+    UPDATE Accounts
+    SET name = ?, user_id = ?, initial_balance = ?, account_description = ?
+    WHERE account_id = ?;
+    ''';
+    final List<Object?> args = [
+      name,
+      user.id,
+      initialBalance,
+      description,
+      originalId,
+    ];
+    dbHandle.execute(sql, args);
+  }
 }
