@@ -3,7 +3,7 @@ import 'package:ledgerly/model/data_classes.dart';
 import 'package:ledgerly/model/table_schema.dart';
 import 'package:ledgerly/services/database_manager.dart';
 
-class AccountCrudService extends CrudService<Account> {
+class AccountCrudService extends UserOwnedCrudService<Account> {
   final TransactionSchema transactionSchema;
   final AccountSchema accountSchema;
 
@@ -11,17 +11,6 @@ class AccountCrudService extends CrudService<Account> {
     this.accountSchema, {
     required this.transactionSchema,
   }) : super(accountSchema);
-
-  List<Account> getAllFor({required final int userId}) {
-    final String sql = '''
-      SELECT ${accountSchema.columns}
-      FROM ${accountSchema.tableName}
-      WHERE ${accountSchema.userIdForeignKeyColumn} = ?;
-    ''';
-    final List<Object?> args = [userId];
-    final results = dbHandle.select(sql, args);
-    return results.map(schema.rowToItem).toList();
-  }
 
   int create({
     required final String name,

@@ -13,6 +13,7 @@ class _FormData {
   String summary = "";
   String? description;
   DateTime dateTime = DateTime.now();
+  TransactionCategory? category;
 
   void submit(
     final BuildContext context,
@@ -32,6 +33,7 @@ class _FormData {
       summary: summary,
       dateTime: dateTime,
       description: description,
+      category: category,
     );
     Navigator.of(context).pop();
   }
@@ -64,7 +66,7 @@ class AddTransactionScreen extends StatelessWidget {
         currencyPrecision: user.currencyPrecision,
         currency: user.currency,
       ),
-      TransactionAccountFormField(
+      TransactionAccountAndCategoryFormField(
         onSaved: (newValue) {
           assert(newValue != null);
           _formData.sourceAccount = newValue!.sourceAccountId == null
@@ -73,6 +75,9 @@ class AddTransactionScreen extends StatelessWidget {
           _formData.destinationAccount = newValue.destinationAccountId == null
               ? null
               : accountCrudService.getById(newValue.destinationAccountId!);
+          _formData.category = newValue.categoryId == null
+              ? null
+              : transactionCategoryCrudService.getById(newValue.categoryId!);
         },
       ),
       DescriptionFormField(

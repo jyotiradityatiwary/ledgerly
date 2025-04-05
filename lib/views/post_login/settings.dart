@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:ledgerly/notifiers/preferences_notifier.dart';
 import 'package:ledgerly/services/database_manager.dart';
+import 'package:ledgerly/views/post_login/categories.dart';
 import 'package:provider/provider.dart';
 
 class SettingsPage extends StatelessWidget {
@@ -9,6 +10,17 @@ class SettingsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final children = <ListTile>[
+      ListTile(
+        title: Text("Manage Categories"),
+        subtitle: Text(
+            "Add, rename, or remove the different categories that user can assign transactions to."),
+        leading: Icon(Icons.category),
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => CategoriesScreen(),
+          ),
+        ),
+      ),
       ListTile(
         title: Text("Logout"),
         onTap: () {

@@ -141,7 +141,7 @@ List<Object?> _cloudUserToListWithoutId(final CloudUser cloudUser) => [
       cloudUser.loginExpiryDateTime.millisecondsSinceEpoch,
     ];
 
-const transactionCategorySchema = TableSchema<TransactionCategory>(
+const transactionCategorySchema = UserOwnedTableSchema<TransactionCategory>(
   tableName: 'TransactionCategories',
   columns:
       'category_id, user_id, category_name, category_type, category_description',
@@ -149,6 +149,7 @@ const transactionCategorySchema = TableSchema<TransactionCategory>(
   updateSetClauseWithoutId:
       'user_id = ?, category_name = ?, category_type = ?, category_description = ?',
   primaryKeyColumn: 'category_id',
+  userIdForeignKeyColumn: 'user_id',
   createTableSql: '''
 CREATE TABLE TransactionCategories (
   category_id INTEGER PRIMARY KEY,
@@ -184,10 +185,10 @@ List<Object?> _transactionCategoryToListWithoutId(
 const transactionSchema = TransactionSchema(
   tableName: 'Transactions',
   columns:
-      'transaction_id, source_account_id, destination_account_id, amount, transaction_summary, transaction_description, transaction_datetime',
-  insertPlaceholders: '?, ?, ?, ?, ?, ?, ?',
+      'transaction_id, source_account_id, destination_account_id, amount, transaction_summary, transaction_description, transaction_datetime, category_id',
+  insertPlaceholders: '?, ?, ?, ?, ?, ?, ?, ?',
   updateSetClauseWithoutId:
-      'transaction_id = ?, source_account_id = ?, destination_account_id = ?, amount= ?, transaction_summary = ?, transaction_description = ?, transaction_datetime = ?',
+      'transaction_id = ?, source_account_id = ?, destination_account_id = ?, amount= ?, transaction_summary = ?, transaction_description = ?, transaction_datetime = ?, category_id = ?',
   primaryKeyColumn: 'transaction_id',
   createTableSql: '''
 CREATE TABLE Transactions (
@@ -198,6 +199,7 @@ CREATE TABLE Transactions (
     transaction_summary TEXT NOT NULL,
     transaction_description TEXT DEFAULT NULL,
     transaction_datetime INTEGER NOT NULL,
+    category_id INTEGER DEFAULT NULL REFERENCES TransactionCategories(category_id) ON DELETE SET NULL,
     
     -- Ensure at least one of source_account_id or destination_account_id is NOT NULL
     CONSTRAINT chk_at_least_one_account
@@ -299,6 +301,7 @@ END;
   itemToListWithoutId: _transactionToListWithoutId,
   sourceAccountIdColumn: 'source_account_id',
   destinationAccountIdColumn: 'destination_account_id',
+  categoryIdColumn: 'category_id',
 );
 
 Transaction _rowToTransaction(final Row row) => Transaction(
@@ -313,6 +316,9 @@ Transaction _rowToTransaction(final Row row) => Transaction(
       summary: row.columnAt(4),
       description: row.columnAt(5),
       dateTime: DateTime.fromMillisecondsSinceEpoch(row.columnAt(6)),
+      category: row.columnAt(7) == null
+          ? null
+          : transactionCategoryCrudService.getById(row.columnAt(7)),
     );
 
 List<Object?> _transactionToListWithoutId(final Transaction transaction) => [
@@ -322,6 +328,7 @@ List<Object?> _transactionToListWithoutId(final Transaction transaction) => [
       transaction.summary,
       transaction.description,
       transaction.dateTime.millisecondsSinceEpoch,
+      transaction.category?.id,
     ];
 
 const userSchema = TableSchema<User>(

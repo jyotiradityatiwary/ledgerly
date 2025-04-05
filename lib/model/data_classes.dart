@@ -104,6 +104,7 @@ class Transaction extends DatabaseObject {
   final String summary;
   final String? description;
   final DateTime dateTime;
+  final TransactionCategory? category;
   const Transaction({
     required this.id,
     required this.sourceAccount,
@@ -112,6 +113,7 @@ class Transaction extends DatabaseObject {
     required this.summary,
     required this.description,
     required this.dateTime,
+    required this.category,
   });
 }
 

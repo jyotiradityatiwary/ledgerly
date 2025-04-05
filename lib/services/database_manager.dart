@@ -64,14 +64,12 @@ bool _areTablesInitialized() {
 }
 
 void _initializeTables() {
-  // merge `createTableSql` from all `schema`s
-  final createAllTablesQueryString =
-      _allSchema.map((schema) => schema.createTableSql).join('\n');
-
   // initialize all tables in a single transaction
   dbHandle.execute('BEGIN;');
   try {
-    dbHandle.execute(createAllTablesQueryString);
+    for (final schema in _allSchema) {
+      dbHandle.execute(schema.createTableSql);
+    }
     dbHandle.execute('COMMIT;');
     developer.log("Database tables initialized");
   } catch (error) {

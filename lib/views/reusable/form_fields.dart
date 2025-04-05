@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:ledgerly/model/data_classes.dart';
 import 'package:ledgerly/notifiers/account_notifier.dart';
 import 'package:ledgerly/views/utility/format_currency.dart';
+import 'package:ledgerly/views/utility/transaction_formatting.dart';
 import 'package:provider/provider.dart';
 
 class CurrencyInputFormField extends StatelessWidget {
@@ -170,28 +171,37 @@ class TransactionTypePicker extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SegmentedButton(
-      segments: const <ButtonSegment<TransactionType>>[
-        ButtonSegment(
-          value: TransactionType.incoming,
-          label: Text('Income'),
-          icon: Icon(Icons.download),
-        ),
-        ButtonSegment(
-          value: TransactionType.outgoing,
-          label: Text('Expense'),
-          icon: Icon(Icons.upload),
-        ),
-        ButtonSegment(
-          value: TransactionType.internalTransfer,
-          label: Text('Transfer'),
-          icon: Icon(Icons.swap_vert),
-        ),
-      ],
+      segments: transactionTypeButtonSegments,
       selected: {selection},
       multiSelectionEnabled: false,
       emptySelectionAllowed: false,
       onSelectionChanged: (newSelections) =>
           onSelectionChanged(newSelections.single),
+    );
+  }
+}
+
+class TransactionTypeFormField extends StatelessWidget {
+  final TransactionType initialValue;
+  final void Function(TransactionType newValue) onSaved;
+
+  const TransactionTypeFormField({
+    super.key,
+    required this.initialValue,
+    required this.onSaved,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return FormField(
+      initialValue: initialValue,
+      autovalidateMode: AutovalidateMode.onUnfocus,
+      onSaved: (newValue) => onSaved(newValue!),
+      builder: (final FormFieldState<TransactionType> field) =>
+          TransactionTypePicker(
+        selection: field.value!,
+        onSelectionChanged: field.didChange,
+      ),
     );
   }
 }
@@ -229,21 +239,28 @@ class AccountPicker extends StatelessWidget {
   }
 }
 
-class TransactionAccountFormField extends StatefulWidget {
-  const TransactionAccountFormField({
+class TransactionAccountAndCategoryFormField extends StatefulWidget {
+  const TransactionAccountAndCategoryFormField({
     super.key,
     required this.onSaved,
   });
 
-  final FormFieldSetter<TransactionAccountPickerData> onSaved;
+  final FormFieldSetter<TransactionAccountAndCategoryData> onSaved;
 
   @override
-  State<TransactionAccountFormField> createState() =>
-      _TransactionAccountFormFieldState();
+  State<TransactionAccountAndCategoryFormField> createState() =>
+      _TransactionAccountAndCategoryFormFieldState();
 }
 
-class _TransactionAccountFormFieldState
-    extends State<TransactionAccountFormField> {
+class _TransactionAccountAndCategoryFormFieldState
+    extends State<TransactionAccountAndCategoryFormField> {
+  String? categoryPickerErrorText;
+  void setCategoryPickerErrorText(String? value) {
+    setState(() {
+      categoryPickerErrorText = value;
+    });
+  }
+
   String? sourceAccountPickerErrorText;
   void setSourceAccountPickerErrorText(String? value) {
     setState(() {
@@ -263,8 +280,8 @@ class _TransactionAccountFormFieldState
 
   @override
   Widget build(BuildContext context) {
-    return FormField<TransactionAccountPickerData>(
-      builder: (FormFieldState<TransactionAccountPickerData> field) {
+    return FormField<TransactionAccountAndCategoryData>(
+      builder: (final FormFieldState<TransactionAccountAndCategoryData> field) {
         final TransactionType selectedType = field.value!.type;
         final List<Widget> conditionalSourceAccountField =
             selectedType == TransactionType.incoming ||
@@ -304,7 +321,15 @@ class _TransactionAccountFormFieldState
                 ),
               ] +
               conditionalSourceAccountField +
-              conditionalDestinationAccountField,
+              conditionalDestinationAccountField +
+              [
+                TransactionCategoryPicker(
+                  label: 'Category',
+                  errorText: categoryPickerErrorText,
+                  onSelected: (value) =>
+                      field.didChange(field.value?.copyWithCategoryId(value)),
+                ),
+              ],
         );
       },
       autovalidateMode: AutovalidateMode.onUnfocus,
@@ -333,51 +358,121 @@ class _TransactionAccountFormFieldState
           error = true;
         }
 
+        if (value.categoryId != null) {
+          final categoryType =
+              Provider.of<AccountNotifier>(context, listen: false)
+                  .categories
+                  .where(
+                    (element) => element.id == value.categoryId,
+                  )
+                  .firstOrNull
+                  ?.type;
+          if (categoryType == null) {
+            error = true;
+            setCategoryPickerErrorText("Invalid category selected.");
+          } else if (categoryType != value.type) {
+            error = true;
+            setCategoryPickerErrorText(
+              "Transaction is currently being set as type:${value.type} while "
+              "the selected category is of type $categoryType. Please select a "
+              "category of matching type",
+            );
+          }
+        }
+
         return error ? "Required fields were not provided" : null;
       },
-      initialValue: TransactionAccountPickerData(
+      initialValue: TransactionAccountAndCategoryData(
         type: TransactionType.outgoing,
         sourceAccountId: null,
         destinationAccountId: null,
+        categoryId: null,
       ),
       onSaved: widget.onSaved,
     );
   }
 }
 
-class TransactionAccountPickerData {
+class TransactionAccountAndCategoryData {
   final TransactionType type;
   final int? sourceAccountId;
   final int? destinationAccountId;
+  final int? categoryId;
 
-  TransactionAccountPickerData({
+  const TransactionAccountAndCategoryData({
     required this.type,
     required this.sourceAccountId,
     required this.destinationAccountId,
+    required this.categoryId,
   });
 
-  TransactionAccountPickerData copyWithType(TransactionType newType) =>
-      TransactionAccountPickerData(
-        type: newType,
-        sourceAccountId: sourceAccountId,
-        destinationAccountId: destinationAccountId,
-      );
+  TransactionAccountAndCategoryData copyWithType(TransactionType newType) =>
+      TransactionAccountAndCategoryData(
+          type: newType,
+          sourceAccountId: sourceAccountId,
+          destinationAccountId: destinationAccountId,
+          categoryId: categoryId);
 
-  TransactionAccountPickerData copyWithSourceAccountId(
+  TransactionAccountAndCategoryData copyWithSourceAccountId(
     int? newSourceAccountId,
   ) =>
-      TransactionAccountPickerData(
-        type: type,
-        sourceAccountId: newSourceAccountId,
-        destinationAccountId: destinationAccountId,
-      );
+      TransactionAccountAndCategoryData(
+          type: type,
+          sourceAccountId: newSourceAccountId,
+          destinationAccountId: destinationAccountId,
+          categoryId: categoryId);
 
-  TransactionAccountPickerData copyWithDestinationAccountId(
+  TransactionAccountAndCategoryData copyWithDestinationAccountId(
     int? newDestinationAccountId,
   ) =>
-      TransactionAccountPickerData(
+      TransactionAccountAndCategoryData(
         type: type,
         sourceAccountId: sourceAccountId,
         destinationAccountId: newDestinationAccountId,
+        categoryId: categoryId,
       );
+
+  TransactionAccountAndCategoryData copyWithCategoryId(
+    final int? newCategoryId,
+  ) =>
+      TransactionAccountAndCategoryData(
+          type: type,
+          sourceAccountId: sourceAccountId,
+          destinationAccountId: destinationAccountId,
+          categoryId: newCategoryId);
+}
+
+class TransactionCategoryPicker extends StatelessWidget {
+  final String label;
+  final String? errorText;
+  final ValueChanged<int?>? onSelected;
+  final bool enabled;
+  const TransactionCategoryPicker({
+    super.key,
+    required this.label,
+    this.errorText,
+    this.onSelected,
+    this.enabled = true,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return DropdownMenu<int>(
+      enabled: enabled,
+      label: Text(label),
+      enableFilter: true,
+      enableSearch: true,
+      requestFocusOnTap: false,
+      errorText: errorText,
+      width: 300,
+      onSelected: onSelected,
+      dropdownMenuEntries: Provider.of<AccountNotifier>(context)
+          .categories
+          .map((final category) => DropdownMenuEntry(
+                value: category.id,
+                label: category.name,
+              ))
+          .toList(),
+    );
+  }
 }

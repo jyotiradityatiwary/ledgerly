@@ -10,7 +10,8 @@ final accountCrudService = AccountCrudService(
 );
 final budgetCrudService = CrudService(budgetSchema);
 final cloudUserCrudService = CrudService(cloudUserSchema);
-final transactionCategoryCrudService = CrudService(transactionCategorySchema);
+final transactionCategoryCrudService =
+    UserOwnedCrudService(transactionCategorySchema);
 final transactionCrudService = TransactionCrudService(
   transactionSchema,
   accountSchema: accountSchema,

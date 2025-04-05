@@ -78,3 +78,20 @@ class CrudService<T extends DatabaseObject> {
     dbHandle.execute(sql, [id]);
   }
 }
+
+class UserOwnedCrudService<T extends DatabaseObject> extends CrudService<T> {
+  final UserOwnedTableSchema<T> userOwnedSchema;
+
+  UserOwnedCrudService(this.userOwnedSchema) : super(userOwnedSchema);
+
+  List<T> getAllFor({required final int userId}) {
+    final String sql = '''
+      SELECT ${schema.columns}
+      FROM ${schema.tableName}
+      WHERE ${userOwnedSchema.userIdForeignKeyColumn} = ?;
+    ''';
+    final List<Object?> args = [userId];
+    final results = dbHandle.select(sql, args);
+    return results.map(schema.rowToItem).toList();
+  }
+}

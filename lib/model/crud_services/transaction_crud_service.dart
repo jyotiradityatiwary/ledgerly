@@ -44,6 +44,7 @@ class TransactionCrudService extends CrudService<Transaction> {
     required String summary,
     String? description,
     required DateTime dateTime,
+    TransactionCategory? category,
   }) =>
       insert(Transaction(
         id: -1,
@@ -53,5 +54,21 @@ class TransactionCrudService extends CrudService<Transaction> {
         summary: summary,
         description: description,
         dateTime: dateTime,
+        category: category,
       ));
+
+  bool isCategoryUsed({required final int categoryId}) {
+    final sql = '''
+      SELECT EXISTS (
+        SELECT 1
+        FROM ${transactionSchema.tableName}
+        WHERE ${transactionSchema.categoryIdColumn} = ?
+      );
+    ''';
+    final List<Object?> args = [categoryId];
+    final results = dbHandle.select(sql, args);
+    final int count = results.first.columnAt(0);
+    assert(count == 0 || count == 1);
+    return count == 1;
+  }
 }

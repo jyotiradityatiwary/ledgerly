@@ -4,6 +4,7 @@ import 'package:ledgerly/model/data_classes.dart';
 import 'package:ledgerly/notifiers/account_notifier.dart';
 import 'package:ledgerly/notifiers/preferences_notifier.dart';
 import 'package:ledgerly/views/utility/format_currency.dart';
+import 'package:ledgerly/views/utility/transaction_formatting.dart';
 import 'package:provider/provider.dart';
 
 class TransactionsPage extends StatelessWidget {
@@ -65,12 +66,12 @@ class TransactionsListView extends StatelessWidget {
           currency: user.currency,
         );
         final String formattedTime = dateFormat.format(transaction.dateTime);
+        final String transactionTypeChar = getCharForTransactionType(type);
 
         return ListTile(
           title: Text(transaction.summary),
           subtitle: Text(
-            formattedTime,
-            // style: Theme.of(context).textTheme.bodyMedium,
+            "$formattedTime • ${transaction.category?.name ?? "No category"}",
           ),
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
@@ -82,12 +83,7 @@ class TransactionsListView extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        switch (type) {
-                              TransactionType.incoming => '+ ',
-                              TransactionType.outgoing => '− ',
-                              TransactionType.internalTransfer => '⇆ '
-                            } +
-                            formattedAmount,
+                        "$transactionTypeChar  $formattedAmount",
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
                     ],

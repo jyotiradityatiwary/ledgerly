@@ -38,11 +38,26 @@ class TableSchema<T> {
   });
 }
 
-class AccountSchema extends TableSchema<Account> {
+class UserOwnedTableSchema<T> extends TableSchema<T> {
+  final String userIdForeignKeyColumn;
+
+  const UserOwnedTableSchema({
+    required super.tableName,
+    required super.columns,
+    required super.insertPlaceholders,
+    required super.updateSetClauseWithoutId,
+    required super.primaryKeyColumn,
+    required this.userIdForeignKeyColumn,
+    required super.createTableSql,
+    required super.rowToItem,
+    required super.itemToListWithoutId,
+  });
+}
+
+class AccountSchema extends UserOwnedTableSchema<Account> {
   /// Used to update account balance on every transaction
   final String updateBalanceAddClause;
   final String updateBalanceSubtractClause;
-  final String userIdForeignKeyColumn;
 
   const AccountSchema({
     required super.tableName,
@@ -55,13 +70,14 @@ class AccountSchema extends TableSchema<Account> {
     required super.itemToListWithoutId,
     required this.updateBalanceAddClause,
     required this.updateBalanceSubtractClause,
-    required this.userIdForeignKeyColumn,
+    required super.userIdForeignKeyColumn,
   });
 }
 
 class TransactionSchema extends TableSchema<Transaction> {
   final String sourceAccountIdColumn;
   final String destinationAccountIdColumn;
+  final String categoryIdColumn;
 
   const TransactionSchema({
     required super.tableName,
@@ -74,5 +90,6 @@ class TransactionSchema extends TableSchema<Transaction> {
     required super.itemToListWithoutId,
     required this.sourceAccountIdColumn,
     required this.destinationAccountIdColumn,
+    required this.categoryIdColumn,
   });
 }

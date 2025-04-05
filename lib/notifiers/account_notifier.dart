@@ -14,6 +14,10 @@ class AccountNotifier with ChangeNotifier {
   UnmodifiableListView<Transaction> get transactions =>
       UnmodifiableListView(_transactions);
 
+  List<TransactionCategory> _categories = [];
+  UnmodifiableListView<TransactionCategory> get categories =>
+      UnmodifiableListView(_categories);
+
   final User _user;
 
   AccountNotifier({required User user}) : _user = user {
@@ -22,8 +26,11 @@ class AccountNotifier with ChangeNotifier {
 
   Future<void> _loadAllAndNotify() async {
     try {
-      await _fetchAccounts();
-      await _fetchTransactions();
+      await Future.wait([
+        _fetchAccounts(),
+        _fetchTransactions(),
+        _fetchCategories(),
+      ]);
     } finally {
       await _notifyLoad();
     }
@@ -35,6 +42,10 @@ class AccountNotifier with ChangeNotifier {
 
   Future<void> _fetchTransactions() async {
     _transactions = transactionCrudService.getAllFor(userId: _user.id);
+  }
+
+  Future<void> _fetchCategories() async {
+    _categories = transactionCategoryCrudService.getAllFor(userId: _user.id);
   }
 
   Future<void> _notifyLoad() async {
@@ -119,17 +130,18 @@ class AccountNotifier with ChangeNotifier {
     required String summary,
     String? description,
     required DateTime dateTime,
+    TransactionCategory? category,
   }) async {
     await _notifyUnLoad();
     try {
       final int newId = transactionCrudService.create(
-        sourceAccount: sourceAccount,
-        destinationAccount: destinationAccount,
-        amount: amount,
-        summary: summary,
-        description: description,
-        dateTime: dateTime,
-      );
+          sourceAccount: sourceAccount,
+          destinationAccount: destinationAccount,
+          amount: amount,
+          summary: summary,
+          description: description,
+          dateTime: dateTime,
+          category: category);
       _transactions.add(transactionCrudService.getById(newId));
 
       // reload accounts because balances will be changed
@@ -149,6 +161,65 @@ class AccountNotifier with ChangeNotifier {
 
       // reload accounts because balances will be changed
       await _fetchAccounts();
+    } finally {
+      await _notifyLoad();
+    }
+  }
+
+  Future<void> addOrModifyCategory({
+    final int? originalId,
+    required final String name,
+    required final User user,
+    required final TransactionType type,
+    required final String? description,
+  }) async {
+    await _notifyUnLoad();
+    try {
+      if (originalId == null) {
+        final int newId =
+            transactionCategoryCrudService.insert(TransactionCategory(
+          id: -1,
+          user: user,
+          name: name,
+          type: type,
+          description: description,
+        ));
+        _categories.add(transactionCategoryCrudService.getById(newId));
+      } else {
+        // TODO: test
+        transactionCategoryCrudService.update(TransactionCategory(
+          id: originalId,
+          user: user,
+          name: name,
+          type: type,
+          description: description,
+        ));
+
+        // update state
+        final idx = _categories.indexWhere(
+          (element) => element.id == originalId,
+        );
+        _categories[idx] = transactionCategoryCrudService.getById(originalId);
+      }
+    } finally {
+      await _notifyLoad();
+    }
+  }
+
+  bool areAnyTransactionsLinkedToCategory({required final int categoryId}) =>
+      transactionCrudService.isCategoryUsed(categoryId: categoryId);
+
+  Future<void> deleteCategory({required final int categoryId}) async {
+    await _notifyUnLoad();
+    try {
+      final shouldRefreshTransactions =
+          areAnyTransactionsLinkedToCategory(categoryId: categoryId);
+      transactionCategoryCrudService.delete(categoryId);
+      _categories.removeWhere(
+        (category) => category.id == categoryId,
+      );
+      // re-fetch transactions if some have their category field changed
+      if (shouldRefreshTransactions) await _fetchTransactions();
     } finally {
       await _notifyLoad();
     }
