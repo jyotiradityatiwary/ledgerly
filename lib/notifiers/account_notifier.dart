@@ -96,7 +96,7 @@ class AccountNotifier with ChangeNotifier {
     }
   }
 
-  Future<bool> hasTransactions(int accountId) async {
+  bool hasTransactions(int accountId) {
     return accountCrudService.hasTransactions(accountId: accountId);
   }
 

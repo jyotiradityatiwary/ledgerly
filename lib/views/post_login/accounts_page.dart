@@ -99,6 +99,7 @@ class _AccountListView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final user = Provider.of<PreferencesNotifier>(context).user!;
+    final theme = Theme.of(context);
 
     return SizedBox(
       height: 100,
@@ -114,29 +115,83 @@ class _AccountListView extends StatelessWidget {
           final account = accountNotifier.accounts[idx];
           return SizedBox(
             width: 150,
-            child: ElevatedButton(
-              onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => AddOrModifyAccountScreen(
-                    account: account,
+            child: MenuAnchor(
+              menuChildren: [
+                MenuItemButton(
+                  onPressed: () {
+                    Navigator.of(context).push(MaterialPageRoute(
+                      builder: (context) => AddOrModifyAccountScreen(
+                        account: account,
+                      ),
+                    ));
+                  },
+                  leadingIcon: Icon(Icons.edit),
+                  child: Text(
+                    'Edit',
+                    style: theme.textTheme.bodyMedium,
                   ),
                 ),
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                spacing: 8,
-                children: [
-                  Text(
-                    account.name,
-                    style: Theme.of(context).textTheme.titleMedium,
+                MenuItemButton(
+                  onPressed: () => accountNotifier.hasTransactions(account.id)
+                      ? showAdaptiveDialog(
+                          context: context,
+                          builder: (context) =>
+                              _ShouldDeleteAccountWithTransactionsDialog(
+                            account: account,
+                            accountNotifier: accountNotifier,
+                          ),
+                        )
+                      : accountNotifier.deleteAccount(id: account.id),
+                  leadingIcon: Icon(
+                    Icons.delete,
+                    color: theme.colorScheme.error,
                   ),
-                  Text(formatCurrency(
-                    magnitude: account.currentBalance,
-                    maxPrecision: user.currencyPrecision,
-                    currency: user.currency,
-                  ))
-                ],
+                  child: Text(
+                    'Delete',
+                    style: theme.textTheme.bodyMedium!
+                        .copyWith(color: theme.colorScheme.error),
+                  ),
+                ),
+              ],
+              builder: (context, controller, child) {
+                void toggle() =>
+                    controller.isOpen ? controller.close() : controller.open();
+                return InkWell(
+                  onTap: () => ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text("Long press or right click for options."),
+                      duration: Duration(seconds: 2),
+                      showCloseIcon: true,
+                    ),
+                  ),
+                  onLongPress: toggle,
+                  onSecondaryTap: toggle,
+                  child: child,
+                );
+              },
+              style: theme.menuTheme.style?.copyWith(
+                backgroundColor: WidgetStateColor.resolveWith(
+                  (states) => theme.colorScheme.primaryContainer,
+                ),
+                elevation: WidgetStatePropertyAll(4.0),
+              ),
+              child: Card(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  spacing: 8,
+                  children: [
+                    Text(
+                      account.name,
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    Text(formatCurrency(
+                      magnitude: account.currentBalance,
+                      maxPrecision: user.currencyPrecision,
+                      currency: user.currency,
+                    ))
+                  ],
+                ),
               ),
             ),
           );

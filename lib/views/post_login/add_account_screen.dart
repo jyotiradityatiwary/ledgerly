@@ -76,7 +76,7 @@ class AddOrModifyAccountScreen extends StatelessWidget {
       child: Scaffold(
         appBar: AppBar(
           title: Text(
-            'Add a new account',
+            _originalId == null ? 'Add a new account' : "Edit account",
           ),
         ),
         floatingActionButton: FloatingActionButton.extended(
