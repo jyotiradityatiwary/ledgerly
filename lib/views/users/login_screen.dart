@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:ledgerly/notifiers/preferences_notifier.dart';
-import 'package:ledgerly/view_models/login_screen.dart';
-import 'package:ledgerly/views/add_user_screen.dart';
+import 'package:ledgerly/notifiers/login_notifier.dart';
+import 'package:ledgerly/notifiers/user_notifier.dart';
+import 'package:ledgerly/views/users/add_user_screen.dart';
 import 'package:provider/provider.dart';
 
 class LoginScreen extends StatelessWidget {
@@ -35,7 +35,7 @@ class _UserPicker extends StatelessWidget {
       child: Container(
         constraints: BoxConstraints(maxWidth: 600),
         padding: EdgeInsets.symmetric(horizontal: 8),
-        child: Consumer<LoginScreenViewModel>(
+        child: Consumer<UserNotifier>(
           builder: (context, viewModel, child) => viewModel.users.isEmpty
               ? Text("No users found.")
               : _UserListView(viewModel: viewModel),
@@ -46,7 +46,7 @@ class _UserPicker extends StatelessWidget {
 }
 
 class _UserListView extends StatelessWidget {
-  final LoginScreenViewModel viewModel;
+  final UserNotifier viewModel;
 
   const _UserListView({
     required this.viewModel,
@@ -66,7 +66,7 @@ class _UserListView extends StatelessWidget {
         return ListTile(
           title: Text(user.name),
           onTap: () {
-            Provider.of<PreferencesNotifier>(
+            Provider.of<LoginNotifier>(
               context,
               listen: false,
             ).login(userId: user.id);
@@ -147,7 +147,7 @@ class _AccountDeletionConfirmationDialog extends StatelessWidget {
         ),
         TextButton(
           onPressed: () {
-            Provider.of<LoginScreenViewModel>(context).deleteUser(userId);
+            Provider.of<UserNotifier>(context).deleteUser(userId);
             Navigator.of(context).pop();
           },
           style: TextButton.styleFrom(

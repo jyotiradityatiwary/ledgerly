@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ledgerly/notifiers/account_notifier.dart';
-import 'package:ledgerly/views/post_login/add_category_screen.dart';
+import 'package:ledgerly/views/accounts/add_category_screen.dart';
 import 'package:ledgerly/views/utility/transaction_formatting.dart';
 import 'package:provider/provider.dart';
 

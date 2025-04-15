@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:ledgerly/services/app_manager.dart';
-import 'package:ledgerly/views/error_screen.dart';
-import 'package:ledgerly/views/login_checker.dart';
-import 'package:ledgerly/views/loading_screen.dart';
+import 'package:ledgerly/views/reusable/error_screen.dart';
+import 'package:ledgerly/views/users/login_checker.dart';
+import 'package:ledgerly/views/reusable/loading_screen.dart';
 
 /// Handles initialization and disposal of the app
 class AppInitializer extends StatefulWidget {

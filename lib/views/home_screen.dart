@@ -1,22 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:ledgerly/views/post_login/accounts_page.dart';
-import 'package:ledgerly/views/post_login/settings.dart';
+import 'package:ledgerly/notifiers/home_screen_notifier.dart';
+import 'package:ledgerly/views/accounts/accounts_page.dart';
+import 'package:ledgerly/views/insights/insights.dart';
+import 'package:ledgerly/views/settings.dart';
 
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
-
-  @override
-  State<HomeScreen> createState() => _HomeScreenState();
-}
-
-class _HomeScreenState extends State<HomeScreen> {
-  int _currentIndex = 0;
-
-  void changeIndex(int value) {
-    setState(() {
-      _currentIndex = value;
-    });
-  }
+class HomeScreen extends StatelessWidget {
+  HomeScreen({super.key});
 
   static const List<_Destination> _destinations = [
     _Destination(
@@ -28,7 +17,7 @@ class _HomeScreenState extends State<HomeScreen> {
     _Destination(
       title: 'Insights',
       icon: Icon(Icons.insights),
-      body: Placeholder(),
+      body: InsightsPage(),
       floatingActionButton: null,
     ),
     _Destination(
@@ -37,6 +26,12 @@ class _HomeScreenState extends State<HomeScreen> {
       body: Placeholder(),
       floatingActionButton: null,
     ),
+    _Destination(
+      title: 'Settings',
+      icon: Icon(Icons.settings),
+      body: SettingsPage(),
+      floatingActionButton: null,
+    )
   ];
 
   final List<BottomNavigationBarItem> _bottomNavigationBarItems = [
@@ -61,73 +56,67 @@ class _HomeScreenState extends State<HomeScreen> {
           destinations: _destinations,
           bottomNavigationBarItems: _bottomNavigationBarItems,
           navigationRailDestinations: _navigationRailDestinations,
-          currentIndex: _currentIndex,
-          changeIndex: changeIndex,
           verticalLayout: 0.9 * constraints.maxHeight > constraints.maxWidth,
         ),
       );
 }
 
-class _Scaffold extends StatelessWidget {
+class _Scaffold extends StatefulWidget {
   final List<_Destination> _destinations;
   final List<BottomNavigationBarItem> _bottomNavigationBarItems;
   final List<NavigationRailDestination> _navigationRailDestinations;
-  final int _currentIndex;
-  final void Function(int) _changeIndex;
   final bool verticalLayout;
 
   const _Scaffold({
     required List<_Destination> destinations,
     required List<BottomNavigationBarItem> bottomNavigationBarItems,
     required List<NavigationRailDestination> navigationRailDestinations,
-    required int currentIndex,
-    required void Function(int) changeIndex,
     required this.verticalLayout,
-  })  : _changeIndex = changeIndex,
-        _currentIndex = currentIndex,
-        _navigationRailDestinations = navigationRailDestinations,
+  })  : _navigationRailDestinations = navigationRailDestinations,
         _bottomNavigationBarItems = bottomNavigationBarItems,
         _destinations = destinations;
 
   @override
+  State<_Scaffold> createState() => _ScaffoldState();
+}
+
+class _ScaffoldState extends State<_Scaffold> {
+  final HomeScreenNotifier notifier = HomeScreenNotifier();
+
+  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(_destinations[_currentIndex].title),
-        actions: [
-          IconButton(
-              onPressed: () {
-                Navigator.of(context).push(MaterialPageRoute(
-                  builder: (context) => SettingsScreen(),
-                ));
-              },
-              icon: Icon(Icons.settings))
-        ],
-      ),
-      floatingActionButton: _destinations[_currentIndex].floatingActionButton,
-      body: verticalLayout
-          ? _destinations[_currentIndex].body
-          : Row(
-              children: [
-                NavigationRail(
-                  destinations: _navigationRailDestinations,
-                  selectedIndex: _currentIndex,
-                  onDestinationSelected: _changeIndex,
-                  labelType: NavigationRailLabelType.all,
-                  extended: false,
-                ),
-                Expanded(child: _destinations[_currentIndex].body),
-              ],
-            ),
-      bottomNavigationBar: verticalLayout
-          ? BottomNavigationBar(
-              currentIndex: _currentIndex,
-              onTap: _changeIndex,
-              items: _bottomNavigationBarItems,
-              type: BottomNavigationBarType.fixed,
-            )
-          : null,
-    );
+    return ListenableBuilder(
+        listenable: notifier,
+        builder: (context, child) {
+          return Scaffold(
+            floatingActionButton: widget
+                ._destinations[notifier.navBarSelection].floatingActionButton,
+            body: widget.verticalLayout
+                ? widget._destinations[notifier.navBarSelection].body
+                : Row(
+                    children: [
+                      NavigationRail(
+                        destinations: widget._navigationRailDestinations,
+                        selectedIndex: notifier.navBarSelection,
+                        onDestinationSelected: notifier.changeNavBarSelection,
+                        labelType: NavigationRailLabelType.all,
+                        extended: false,
+                      ),
+                      Expanded(
+                          child: widget
+                              ._destinations[notifier.navBarSelection].body),
+                    ],
+                  ),
+            bottomNavigationBar: widget.verticalLayout
+                ? BottomNavigationBar(
+                    currentIndex: notifier.navBarSelection,
+                    onTap: notifier.changeNavBarSelection,
+                    items: widget._bottomNavigationBarItems,
+                    type: BottomNavigationBarType.fixed,
+                  )
+                : null,
+          );
+        });
   }
 }
 

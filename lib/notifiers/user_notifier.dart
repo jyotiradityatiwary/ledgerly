@@ -4,14 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:ledgerly/model/data_classes.dart';
 import 'package:ledgerly/services/crud_services.dart';
 
-class LoginScreenViewModel with ChangeNotifier {
+class UserNotifier with ChangeNotifier {
   List<User> _users = [];
   UnmodifiableListView<User> get users => UnmodifiableListView(_users);
 
   bool _isLoaded = false;
   bool get isLoaded => _isLoaded;
 
-  LoginScreenViewModel() {
+  UserNotifier() {
     _load();
   }
 

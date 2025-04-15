@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ledgerly/model/data_classes.dart';
-import 'package:ledgerly/view_models/login_screen.dart';
+import 'package:ledgerly/notifiers/user_notifier.dart';
 import 'package:ledgerly/views/reusable/form_fields.dart';
 import 'package:provider/provider.dart';
 
@@ -40,8 +40,7 @@ class AddOrModifyUserScreen extends StatelessWidget {
       // if validated
       _formKey.currentState!.save();
 
-      final viewModel =
-          Provider.of<LoginScreenViewModel>(context, listen: false);
+      final viewModel = Provider.of<UserNotifier>(context, listen: false);
       viewModel.createOrModifyUser(
         originalUserId: _originalUserId,
         name: _formData.name,

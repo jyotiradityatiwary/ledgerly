@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 abstract class DatabaseObject {
   int get id;
 
@@ -130,4 +132,15 @@ class User extends DatabaseObject {
     required this.currencyPrecision,
     required this.currency,
   });
+
+  String formatIntMoney(
+    final int magnitude, {
+    final bool showCurrency = false,
+  }) {
+    final double displayValue = doubleFromIntMoney(magnitude);
+    return showCurrency ? '$currency $displayValue' : displayValue.toString();
+  }
+
+  double doubleFromIntMoney(final int magnitude) =>
+      magnitude.toDouble() / math.pow(10.0, currencyPrecision);
 }

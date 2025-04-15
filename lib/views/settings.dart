@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:ledgerly/notifiers/preferences_notifier.dart';
+import 'package:ledgerly/notifiers/login_notifier.dart';
 import 'package:ledgerly/services/database_manager.dart';
-import 'package:ledgerly/views/post_login/categories.dart';
+import 'package:ledgerly/views/accounts/categories.dart';
+import 'package:ledgerly/views/reusable/content_container.dart';
 import 'package:provider/provider.dart';
 
 class SettingsPage extends StatelessWidget {
@@ -24,7 +25,7 @@ class SettingsPage extends StatelessWidget {
       ListTile(
         title: Text("Logout"),
         onTap: () {
-          Provider.of<PreferencesNotifier>(
+          Provider.of<LoginNotifier>(
             context,
             listen: false,
           ).logout();
@@ -44,20 +45,7 @@ class SettingsPage extends StatelessWidget {
         ),
       ),
     ];
-    return Center(
-      child: Container(
-        constraints: BoxConstraints(maxWidth: 600),
-        padding: EdgeInsets.symmetric(horizontal: 8),
-        child: ListView.separated(
-          padding: EdgeInsets.only(bottom: 80),
-          separatorBuilder: (context, index) => SizedBox(
-            height: 8,
-          ),
-          itemBuilder: (context, index) => children[index],
-          itemCount: children.length,
-        ),
-      ),
-    );
+    return ContentList(children: children);
   }
 }
 

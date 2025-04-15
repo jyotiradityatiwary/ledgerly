@@ -5,7 +5,7 @@ late SharedPreferencesWithCache _sp;
 Future<void> initializePreferencesService() async {
   _sp = await SharedPreferencesWithCache.create(
     cacheOptions: SharedPreferencesWithCacheOptions(
-      allowList: Preferences._set.map((x) => x.key).toSet(),
+      allowList: Preferences.all.map((x) => x.key).toSet(),
     ),
   );
   Preferences._initializeAll();
@@ -16,11 +16,17 @@ abstract final class Preferences {
       _IntPreference('currentUserId', -1);
   static const Preference<bool> isSomeOneLoggedIn =
       _BoolPreference('isSomeOneLoggedIn', false);
+  static const Preference<int> homeScreenNavBarSelection =
+      _IntPreference('homeScreenNavBarSelection', 0);
 
-  static const Set<Preference> _set = {currentUserId, isSomeOneLoggedIn};
+  static const Set<Preference> all = {
+    currentUserId,
+    isSomeOneLoggedIn,
+    homeScreenNavBarSelection,
+  };
 
   static void _initializeAll() {
-    for (final pref in Preferences._set) {
+    for (final pref in Preferences.all) {
       if (!_sp.containsKey(pref.key)) pref.value = pref.defaultValue;
     }
   }

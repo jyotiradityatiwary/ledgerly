@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:ledgerly/notifiers/account_notifier.dart';
-import 'package:ledgerly/notifiers/preferences_notifier.dart';
-import 'package:ledgerly/view_models/login_screen.dart';
-import 'package:ledgerly/views/post_login/home_screen.dart';
-import 'package:ledgerly/views/login_screen.dart';
+import 'package:ledgerly/notifiers/login_notifier.dart';
+import 'package:ledgerly/notifiers/user_notifier.dart';
+import 'package:ledgerly/views/home_screen.dart';
+import 'package:ledgerly/views/users/login_screen.dart';
 import 'package:provider/provider.dart';
 
 class LoginChecker extends StatelessWidget {
@@ -21,8 +21,8 @@ class LoginChecker extends StatelessWidget {
         builder: (context) => LoginScreen(),
       ),
     );
-    final loginViewModelProvider = ChangeNotifierProvider<LoginScreenViewModel>(
-      create: (context) => LoginScreenViewModel(),
+    final loginViewModelProvider = ChangeNotifierProvider<UserNotifier>(
+      create: (context) => UserNotifier(),
       child: loginNavigator,
     );
 
@@ -34,9 +34,9 @@ class LoginChecker extends StatelessWidget {
       ),
     );
 
-    return ChangeNotifierProvider<PreferencesNotifier>(
-      create: (context) => PreferencesNotifier(),
-      child: Consumer<PreferencesNotifier>(
+    return ChangeNotifierProvider<LoginNotifier>(
+      create: (context) => LoginNotifier(),
+      child: Consumer<LoginNotifier>(
         builder: (final context, final preferencesNotifier, final _) {
           final user = preferencesNotifier.user;
           if (user == null) {

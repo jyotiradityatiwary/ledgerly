@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:ledgerly/model/data_classes.dart';
 import 'package:ledgerly/notifiers/account_notifier.dart';
-import 'package:ledgerly/notifiers/preferences_notifier.dart';
+import 'package:ledgerly/notifiers/login_notifier.dart';
 import 'package:ledgerly/views/reusable/form_fields.dart';
 import 'package:provider/provider.dart';
 
@@ -40,14 +40,14 @@ class AddOrModifyAccountScreen extends StatelessWidget {
       Provider.of<AccountNotifier>(context, listen: false).addOrModifyAccount(
         originalId: _originalId,
         name: _formData.name,
-        user: Provider.of<PreferencesNotifier>(context, listen: false).user!,
+        user: Provider.of<LoginNotifier>(context, listen: false).user!,
         initialBalance: _formData.initialBalance,
         description: _formData.description,
       );
       Navigator.of(context).pop();
     }
 
-    final user = Provider.of<PreferencesNotifier>(context).user!;
+    final user = Provider.of<LoginNotifier>(context).user!;
     final List<Widget> children = [
       NameFormField(
         label: 'Account Name',
@@ -60,8 +60,7 @@ class AddOrModifyAccountScreen extends StatelessWidget {
         label: 'Initial Balance',
         onSaveAmount: (newAmount) => _formData.initialBalance = newAmount,
         onFieldSubmitted: (value) => submit(),
-        currencyPrecision: user.currencyPrecision,
-        currency: user.currency,
+        user: user,
         initialValue: _formData.initialBalance,
       ),
       DescriptionFormField(

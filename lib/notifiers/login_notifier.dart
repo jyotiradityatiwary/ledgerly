@@ -3,14 +3,14 @@ import 'package:ledgerly/model/data_classes.dart';
 import 'package:ledgerly/services/crud_services.dart';
 import 'package:ledgerly/services/preference_service.dart';
 
-class PreferencesNotifier extends ChangeNotifier {
+class LoginNotifier extends ChangeNotifier {
   bool _isLoaded = false;
   get isLoaded => _isLoaded;
 
   User? _user;
   User? get user => _user;
 
-  PreferencesNotifier() {
+  LoginNotifier() {
     _loadUser();
   }
 

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:ledgerly/model/data_classes.dart';
 import 'package:ledgerly/notifiers/account_notifier.dart';
-import 'package:ledgerly/notifiers/preferences_notifier.dart';
+import 'package:ledgerly/notifiers/login_notifier.dart';
 import 'package:ledgerly/views/reusable/form_fields.dart';
 import 'package:provider/provider.dart';
 
@@ -40,7 +40,7 @@ class AddOrModifyCategoryScreen extends StatelessWidget {
       Provider.of<AccountNotifier>(context, listen: false).addOrModifyCategory(
         originalId: _originalId,
         name: _formData.name,
-        user: Provider.of<PreferencesNotifier>(context, listen: false).user!,
+        user: Provider.of<LoginNotifier>(context, listen: false).user!,
         type: _formData.type,
         description: _formData.description,
       );

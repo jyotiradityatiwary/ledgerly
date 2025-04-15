@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:ledgerly/model/data_classes.dart';
 import 'package:ledgerly/notifiers/account_notifier.dart';
-import 'package:ledgerly/notifiers/preferences_notifier.dart';
-import 'package:ledgerly/views/utility/format_currency.dart';
+import 'package:ledgerly/notifiers/login_notifier.dart';
 import 'package:ledgerly/views/utility/transaction_formatting.dart';
 import 'package:provider/provider.dart';
 
@@ -37,7 +36,7 @@ class TransactionsListView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final user = Provider.of<PreferencesNotifier>(context).user!;
+    final user = Provider.of<LoginNotifier>(context).user!;
     final DateFormat dateFormat = DateFormat.yMMMd().add_jm();
 
     return ListView.separated(
@@ -60,11 +59,7 @@ class TransactionsListView extends StatelessWidget {
                 ? TransactionType.incoming
                 : TransactionType.internalTransfer;
 
-        final String formattedAmount = formatCurrency(
-          magnitude: transaction.amount,
-          maxPrecision: user.currencyPrecision,
-          currency: user.currency,
-        );
+        final String formattedAmount = user.formatIntMoney(transaction.amount);
         final String formattedTime = dateFormat.format(transaction.dateTime);
         final String transactionTypeChar = getCharForTransactionType(type);
 

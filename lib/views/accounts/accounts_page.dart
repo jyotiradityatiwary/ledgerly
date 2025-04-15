@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:ledgerly/model/data_classes.dart';
 import 'package:ledgerly/notifiers/account_notifier.dart';
-import 'package:ledgerly/notifiers/preferences_notifier.dart';
-import 'package:ledgerly/views/post_login/add_account_screen.dart';
-import 'package:ledgerly/views/post_login/add_transaction_screen.dart';
-import 'package:ledgerly/views/post_login/transactions_page.dart';
-import 'package:ledgerly/views/utility/format_currency.dart';
+import 'package:ledgerly/notifiers/login_notifier.dart';
+import 'package:ledgerly/views/accounts/add_account_screen.dart';
+import 'package:ledgerly/views/accounts/add_transaction_screen.dart';
+import 'package:ledgerly/views/accounts/transactions_page.dart';
+import 'package:ledgerly/views/reusable/content_container.dart';
 import 'package:provider/provider.dart';
 
 class AccountsPage extends StatelessWidget {
@@ -13,76 +13,73 @@ class AccountsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 8),
-        constraints: BoxConstraints(maxWidth: 600),
-        child: Consumer<AccountNotifier>(
-          builder: (context, accountNotifier, child) => accountNotifier.isLoaded
-              ? ListView(
-                  padding: EdgeInsets.only(bottom: 80),
-                  shrinkWrap: true,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Row(
-                        children: [
-                          Text(
-                            "My Accounts",
-                            style: Theme.of(context).textTheme.titleMedium,
-                          ),
-                          Expanded(child: Container()),
-                          IconButton(
-                              onPressed: () {
-                                Navigator.of(context).push(MaterialPageRoute(
-                                  builder: (context) =>
-                                      AddOrModifyAccountScreen(),
-                                ));
-                              },
-                              icon: Icon(Icons.add))
-                        ],
+    return Consumer<AccountNotifier>(
+      builder: (context, accountNotifier, child) => accountNotifier.isLoaded
+          ? ContentList(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Row(
+                    children: [
+                      Text(
+                        "My Accounts",
+                        style: Theme.of(context).textTheme.titleMedium,
                       ),
-                    ),
-                    accountNotifier.accounts.isEmpty
-                        ? Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Text(
-                              "No account found.",
-                            ),
-                          )
-                        : _AccountListView(
-                            accountNotifier: accountNotifier,
-                          ),
-                    Divider(),
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Text(
+                      Expanded(child: Container()),
+                      IconButton(
+                          onPressed: () {
+                            Navigator.of(context).push(MaterialPageRoute(
+                              builder: (context) => AddOrModifyAccountScreen(),
+                            ));
+                          },
+                          icon: Icon(Icons.add))
+                    ],
+                  ),
+                ),
+                accountNotifier.accounts.isEmpty
+                    ? Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text(
+                          "No account found.",
+                        ),
+                      )
+                    : _AccountListView(
+                        accountNotifier: accountNotifier,
+                      ),
+                Divider(),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Row(
+                    children: [
+                      Text(
                         "Recent Transactions",
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
-                    ),
-                    accountNotifier.transactions.isEmpty
-                        ? Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Text(
-                              'No transaction found.',
-                            ),
-                          )
-                        : TransactionsListView(
-                            accountNotifier: accountNotifier,
-                          ),
-                  ],
-                )
-              : child!,
-          child: Column(
-            spacing: 16,
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Text("Loading accounts and transactions..."),
-              CircularProgressIndicator.adaptive(),
-            ],
-          ),
+                    ],
+                  ),
+                ),
+                accountNotifier.transactions.isEmpty
+                    ? Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text(
+                          'No transaction found.',
+                        ),
+                      )
+                    : TransactionsListView(
+                        accountNotifier: accountNotifier,
+                      ),
+              ],
+            )
+          : child!,
+      child: const Center(
+        child: Column(
+          spacing: 16,
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Text("Loading accounts and transactions..."),
+            CircularProgressIndicator.adaptive(),
+          ],
         ),
       ),
     );
@@ -98,7 +95,7 @@ class _AccountListView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final user = Provider.of<PreferencesNotifier>(context).user!;
+    final user = Provider.of<LoginNotifier>(context).user!;
     final theme = Theme.of(context);
 
     return SizedBox(
@@ -185,11 +182,7 @@ class _AccountListView extends StatelessWidget {
                       account.name,
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
-                    Text(formatCurrency(
-                      magnitude: account.currentBalance,
-                      maxPrecision: user.currencyPrecision,
-                      currency: user.currency,
-                    ))
+                    Text(user.formatIntMoney(account.currentBalance)),
                   ],
                 ),
               ),

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:ledgerly/model/data_classes.dart';
 import 'package:ledgerly/notifiers/account_notifier.dart';
-import 'package:ledgerly/notifiers/preferences_notifier.dart';
+import 'package:ledgerly/notifiers/login_notifier.dart';
 import 'package:ledgerly/services/crud_services.dart';
 import 'package:ledgerly/views/reusable/form_fields.dart';
 import 'package:provider/provider.dart';
@@ -47,7 +47,7 @@ class AddTransactionScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final user = Provider.of<PreferencesNotifier>(context).user!;
+    final user = Provider.of<LoginNotifier>(context).user!;
 
     final List<Widget> children = [
       NameFormField(
@@ -63,8 +63,7 @@ class AddTransactionScreen extends StatelessWidget {
         onFieldSubmitted: (value) {
           _formData.submit(context, _formKey);
         },
-        currencyPrecision: user.currencyPrecision,
-        currency: user.currency,
+        user: user,
       ),
       TransactionAccountAndCategoryFormField(
         onSaved: (newValue) {
@@ -79,6 +78,11 @@ class AddTransactionScreen extends StatelessWidget {
               ? null
               : transactionCategoryCrudService.getById(newValue.categoryId!);
         },
+      ),
+      DateInputFormField(
+        label: 'Date',
+        onSaved: (newDate) => _formData.dateTime = newDate,
+        initialValue: _formData.dateTime,
       ),
       DescriptionFormField(
         label: 'Description',
@@ -110,9 +114,7 @@ class AddTransactionScreen extends StatelessWidget {
                 padding: EdgeInsets.only(bottom: 80),
                 itemBuilder: (context, index) => children[index],
                 itemCount: children.length,
-                separatorBuilder: (context, index) => SizedBox.fromSize(
-                  size: Size.fromHeight(16),
-                ),
+                separatorBuilder: (context, index) => SizedBox(height: 16.0),
               ),
             ),
           ),

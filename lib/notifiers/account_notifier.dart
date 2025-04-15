@@ -105,6 +105,9 @@ class AccountNotifier with ChangeNotifier {
     try {
       accountCrudService.delete(id);
       _accounts.removeWhere((account) => account.id == id);
+      _transactions.removeWhere((transaction) =>
+          transaction.sourceAccount?.id == id ||
+          transaction.destinationAccount?.id == id);
     } finally {
       await _notifyLoad();
     }

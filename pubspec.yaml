@@ -41,6 +41,7 @@ dependencies:
   provider: ^6.1.2
   sqlite3_flutter_libs: ^0.5.30
   intl: ^0.20.2
+  fl_chart: ^0.70.2
 
 dev_dependencies:
   flutter_test:

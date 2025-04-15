@@ -1,9 +1,9 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:ledgerly/model/data_classes.dart';
 import 'package:ledgerly/notifiers/account_notifier.dart';
-import 'package:ledgerly/views/utility/format_currency.dart';
 import 'package:ledgerly/views/utility/transaction_formatting.dart';
 import 'package:provider/provider.dart';
 
@@ -13,8 +13,7 @@ class CurrencyInputFormField extends StatelessWidget {
     required this.label,
     required this.onSaveAmount,
     required this.onFieldSubmitted,
-    required this.currencyPrecision,
-    required this.currency,
+    required this.user,
     this.autofocus = false,
     this.initialValue,
   });
@@ -22,8 +21,7 @@ class CurrencyInputFormField extends StatelessWidget {
   final String label;
   final void Function(int newAmount) onSaveAmount;
   final void Function(String value) onFieldSubmitted;
-  final int currencyPrecision;
-  final String currency;
+  final User user;
   final bool autofocus;
   final int? initialValue;
 
@@ -31,13 +29,11 @@ class CurrencyInputFormField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final maxPrecision = currencyPrecision;
-    final maxInputPrecision = maxPrecision - 1;
     return TextFormField(
       decoration: InputDecoration(
         border: OutlineInputBorder(),
         label: Text(label),
-        prefixText: '$currency ',
+        prefixText: '${user.currency} ',
         suffixIcon: IconButton(
           onPressed: () {
             showModalBottomSheet(
@@ -45,7 +41,7 @@ class CurrencyInputFormField extends StatelessWidget {
               builder: (context) => Padding(
                 padding: const EdgeInsets.all(32.0),
                 child: Text(
-                  "You can enter a decimal number (positive or negative). The decimal point can be followed by atmost $maxInputPrecision digits.",
+                  "You can enter a decimal number (positive or negative). The decimal point can be followed by atmost ${user.currency} digits.",
                 ),
               ),
             );
@@ -61,25 +57,21 @@ class CurrencyInputFormField extends StatelessWidget {
       onFieldSubmitted: onFieldSubmitted,
       initialValue: initialValue == null
           ? null
-          : formatCurrency(
-              magnitude: initialValue!,
-              maxPrecision: maxPrecision,
-              currency: null,
-            ),
+          : user.formatIntMoney(initialValue!, showCurrency: false),
       validator: (value) {
         if (value == null || value.isEmpty) {
           return "Please enter an amount.";
         }
         final groups = balanceRegex.firstMatch(value);
         if (groups == null) return "Please enter a valid number";
-        if ((groups[3] ?? '').length > maxInputPrecision) {
-          return 'Maximum decimal precision allowed is $maxInputPrecision';
+        if ((groups[3] ?? '').length > user.currencyPrecision) {
+          return 'Maximum decimal precision allowed is ${user.currencyPrecision}';
         }
         return null;
       },
       onSaved: (newValue) {
         final double amount =
-            double.parse(newValue!) * math.pow(10, maxInputPrecision);
+            double.parse(newValue!) * math.pow(10, user.currencyPrecision);
         onSaveAmount(amount.toInt());
       },
       autovalidateMode: AutovalidateMode.onUnfocus,
@@ -473,6 +465,119 @@ class TransactionCategoryPicker extends StatelessWidget {
                 label: category.name,
               ))
           .toList(),
+    );
+  }
+}
+
+class DateInputFormField extends StatefulWidget {
+  const DateInputFormField({
+    super.key,
+    required this.label,
+    required this.onSaved,
+    this.onFieldSubmitted,
+    this.autofocus = false,
+    this.initialValue,
+    this.firstDate,
+    this.lastDate,
+  });
+
+  final String label;
+  final void Function(DateTime newDate) onSaved;
+  final void Function(String value)? onFieldSubmitted;
+  final bool autofocus;
+  final DateTime? initialValue;
+  final DateTime? firstDate;
+  final DateTime? lastDate;
+
+  @override
+  State<DateInputFormField> createState() => _DateInputFormFieldState();
+}
+
+class _DateInputFormFieldState extends State<DateInputFormField> {
+  final TextEditingController _controller = TextEditingController();
+  final DateFormat _dateFormat = DateFormat('yyyy-MM-dd');
+  DateTime? _selectedDate;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedDate = widget.initialValue;
+    if (_selectedDate != null) {
+      _controller.text = _dateFormat.format(_selectedDate!);
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Future<void> _selectDate(BuildContext context) async {
+    final DateTime now = DateTime.now();
+    final DateTime firstDate = widget.firstDate ?? DateTime(now.year - 5);
+    final DateTime lastDate = widget.lastDate ?? DateTime(now.year + 5);
+
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate ?? now,
+      firstDate: firstDate,
+      lastDate: lastDate,
+    );
+
+    if (picked != null && picked != _selectedDate) {
+      setState(() {
+        _selectedDate = picked;
+        _controller.text = _dateFormat.format(picked);
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FormField<DateTime>(
+      initialValue: _selectedDate,
+      validator: (value) {
+        if (value == null) {
+          return 'Please select a date';
+        }
+        return null;
+      },
+      onSaved: (newValue) {
+        if (newValue != null) {
+          widget.onSaved(newValue);
+        }
+      },
+      builder: (FormFieldState<DateTime> field) {
+        return TextFormField(
+          controller: _controller,
+          decoration: InputDecoration(
+            border: const OutlineInputBorder(),
+            label: Text(widget.label),
+            errorText: field.errorText,
+            suffixIcon: IconButton(
+              icon: const Icon(Icons.calendar_today),
+              onPressed: () => _selectDate(context).then((_) {
+                field.didChange(_selectedDate);
+                if (widget.onFieldSubmitted != null &&
+                    _controller.text.isNotEmpty) {
+                  widget.onFieldSubmitted!(_controller.text);
+                }
+              }),
+            ),
+          ),
+          readOnly: true,
+          autofocus: widget.autofocus,
+          onTap: () => _selectDate(context).then((_) {
+            field.didChange(_selectedDate);
+            if (widget.onFieldSubmitted != null &&
+                _controller.text.isNotEmpty) {
+              widget.onFieldSubmitted!(_controller.text);
+            }
+          }),
+          autovalidateMode: AutovalidateMode.onUnfocus,
+        );
+      },
     );
   }
 }
