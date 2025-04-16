@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:ledgerly/views/app_initializer.dart';
+import 'package:dynamic_color/dynamic_color.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,12 +23,31 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Ledgerly',
-      theme: ThemeData.light(useMaterial3: true),
-      darkTheme: ThemeData.dark(useMaterial3: true),
-      home: AppInitializer(),
-      themeMode: ThemeMode.system,
+    return DynamicColorBuilder(
+      builder: (
+        final ColorScheme? lightDynamic,
+        final ColorScheme? darkDynamic,
+      ) {
+        final lightTheme = lightDynamic == null
+            ? ThemeData.light()
+            : ThemeData(
+                colorScheme: lightDynamic,
+                brightness: Brightness.light,
+              );
+        final darkTheme = darkDynamic == null
+            ? ThemeData.dark()
+            : ThemeData(
+                colorScheme: darkDynamic,
+                brightness: Brightness.dark,
+              );
+        return MaterialApp(
+          title: 'Ledgerly',
+          theme: lightTheme,
+          darkTheme: darkTheme,
+          home: AppInitializer(),
+          themeMode: ThemeMode.system,
+        );
+      },
     );
   }
 }
