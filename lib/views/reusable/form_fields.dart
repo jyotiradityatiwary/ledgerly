@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:ledgerly/model/data_classes.dart';
 import 'package:ledgerly/notifiers/account_notifier.dart';
+import 'package:ledgerly/views/accounts/add_category_screen.dart';
 import 'package:ledgerly/views/utility/transaction_formatting.dart';
 import 'package:provider/provider.dart';
 
@@ -270,6 +271,14 @@ class _TransactionAccountAndCategoryFormFieldState
   final sourceAccountPickerKey = UniqueKey();
   final destinationAccountPickerKey = UniqueKey();
 
+  final categoryPickerController = TextEditingController();
+
+  @override
+  void dispose() {
+    categoryPickerController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return FormField<TransactionAccountAndCategoryData>(
@@ -303,25 +312,29 @@ class _TransactionAccountAndCategoryFormFieldState
                     ),
                   ]
                 : [];
+        final transactionCategoryPicker = TransactionCategoryPicker(
+          label: 'Category',
+          type: selectedType,
+          errorText: categoryPickerErrorText,
+          controller: categoryPickerController,
+          onSelected: (value) => field.didChange(
+            field.value?.copyWithCategoryId(value),
+          ),
+        );
         return Column(
           spacing: 16,
           children: <Widget>[
                 TransactionTypePicker(
-                  onSelectionChanged: (newSelection) =>
-                      field.didChange(field.value!.copyWithType(newSelection)),
+                  onSelectionChanged: (newSelection) {
+                    field.didChange(field.value!.copyWithType(newSelection));
+                    categoryPickerController.clear();
+                  },
                   selection: field.value!.type,
                 ),
               ] +
               conditionalSourceAccountField +
               conditionalDestinationAccountField +
-              [
-                TransactionCategoryPicker(
-                  label: 'Category',
-                  errorText: categoryPickerErrorText,
-                  onSelected: (value) =>
-                      field.didChange(field.value?.copyWithCategoryId(value)),
-                ),
-              ],
+              [transactionCategoryPicker],
         );
       },
       autovalidateMode: AutovalidateMode.onUnfocus,
@@ -400,19 +413,23 @@ class TransactionAccountAndCategoryData {
 
   TransactionAccountAndCategoryData copyWithType(TransactionType newType) =>
       TransactionAccountAndCategoryData(
-          type: newType,
-          sourceAccountId: sourceAccountId,
-          destinationAccountId: destinationAccountId,
-          categoryId: categoryId);
+        type: newType,
+        sourceAccountId:
+            newType == TransactionType.incoming ? null : sourceAccountId,
+        destinationAccountId:
+            newType == TransactionType.outgoing ? null : destinationAccountId,
+        categoryId: null,
+      );
 
   TransactionAccountAndCategoryData copyWithSourceAccountId(
     int? newSourceAccountId,
   ) =>
       TransactionAccountAndCategoryData(
-          type: type,
-          sourceAccountId: newSourceAccountId,
-          destinationAccountId: destinationAccountId,
-          categoryId: categoryId);
+        type: type,
+        sourceAccountId: newSourceAccountId,
+        destinationAccountId: destinationAccountId,
+        categoryId: categoryId,
+      );
 
   TransactionAccountAndCategoryData copyWithDestinationAccountId(
     int? newDestinationAccountId,
@@ -428,10 +445,11 @@ class TransactionAccountAndCategoryData {
     final int? newCategoryId,
   ) =>
       TransactionAccountAndCategoryData(
-          type: type,
-          sourceAccountId: sourceAccountId,
-          destinationAccountId: destinationAccountId,
-          categoryId: newCategoryId);
+        type: type,
+        sourceAccountId: sourceAccountId,
+        destinationAccountId: destinationAccountId,
+        categoryId: newCategoryId,
+      );
 }
 
 class TransactionCategoryPicker extends StatelessWidget {
@@ -439,9 +457,13 @@ class TransactionCategoryPicker extends StatelessWidget {
   final String? errorText;
   final ValueChanged<int?>? onSelected;
   final bool enabled;
+  final TextEditingController controller;
+  final TransactionType type;
   const TransactionCategoryPicker({
     super.key,
     required this.label,
+    required this.type,
+    required this.controller,
     this.errorText,
     this.onSelected,
     this.enabled = true,
@@ -449,6 +471,24 @@ class TransactionCategoryPicker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final entries = Provider.of<AccountNotifier>(context)
+        .categories
+        .where(
+          (category) => category.type == type,
+        )
+        .map((final category) => DropdownMenuEntry(
+              value: category.id,
+              label: category.name,
+            ))
+        .toList();
+    const newCategoryEntryValue = -1;
+    assert(
+        entries.where((entry) => entry.value == newCategoryEntryValue).isEmpty);
+    entries.add(DropdownMenuEntry(
+      value: newCategoryEntryValue,
+      label: 'Create new category',
+      leadingIcon: Icon(Icons.add),
+    ));
     return DropdownMenu<int>(
       enabled: enabled,
       label: Text(label),
@@ -457,14 +497,22 @@ class TransactionCategoryPicker extends StatelessWidget {
       requestFocusOnTap: false,
       errorText: errorText,
       width: 300,
-      onSelected: onSelected,
-      dropdownMenuEntries: Provider.of<AccountNotifier>(context)
-          .categories
-          .map((final category) => DropdownMenuEntry(
-                value: category.id,
-                label: category.name,
-              ))
-          .toList(),
+      controller: controller,
+      onSelected: (value) {
+        if (value == newCategoryEntryValue) {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => AddOrModifyCategoryScreen(
+                initiallySelectedType: type,
+              ),
+            ),
+          );
+          controller.clear();
+        } else if (onSelected != null) {
+          onSelected!(value);
+        }
+      },
+      dropdownMenuEntries: entries,
     );
   }
 }

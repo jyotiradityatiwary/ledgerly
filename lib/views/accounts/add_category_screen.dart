@@ -18,13 +18,22 @@ class _FormData {
 }
 
 class AddOrModifyCategoryScreen extends StatelessWidget {
-  AddOrModifyCategoryScreen({super.key, TransactionCategory? category})
-      : _formData = _FormData(
+  AddOrModifyCategoryScreen({
+    super.key,
+    TransactionCategory? category,
+    TransactionType? initiallySelectedType,
+  })  : _formData = _FormData(
           name: category?.name ?? "",
           description: category?.description,
-          type: category?.type ?? TransactionType.outgoing,
+          type: category?.type ??
+              initiallySelectedType ??
+              TransactionType.outgoing,
         ),
-        _originalId = category?.id;
+        _originalId = category?.id {
+    // either initial category (to be modified) or a pre-selected type should
+    // be specified but not both
+    assert(category == null || initiallySelectedType == null);
+  }
 
   final int? _originalId;
   final _formKey = GlobalKey<FormState>();
