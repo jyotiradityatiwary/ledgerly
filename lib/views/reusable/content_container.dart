@@ -26,9 +26,7 @@ class ContentList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView.separated(
-      physics: const AlwaysScrollableScrollPhysics(
-        parent: BouncingScrollPhysics(),
-      ),
+      physics: const AlwaysScrollableScrollPhysics(),
       itemBuilder: (context, index) => Center(
         child: Container(
           constraints: const BoxConstraints(maxWidth: 600.0),

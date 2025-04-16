@@ -18,7 +18,7 @@ class HomeScreen extends StatelessWidget {
       title: 'Insights',
       icon: Icon(Icons.insights),
       body: InsightsPage(),
-      floatingActionButton: null,
+      floatingActionButton: InsightsPageFAB(),
     ),
     _Destination(
       title: 'Dues',
@@ -91,22 +91,24 @@ class _ScaffoldState extends State<_Scaffold> {
           return Scaffold(
             floatingActionButton: widget
                 ._destinations[notifier.navBarSelection].floatingActionButton,
-            body: widget.verticalLayout
-                ? widget._destinations[notifier.navBarSelection].body
-                : Row(
-                    children: [
-                      NavigationRail(
-                        destinations: widget._navigationRailDestinations,
-                        selectedIndex: notifier.navBarSelection,
-                        onDestinationSelected: notifier.changeNavBarSelection,
-                        labelType: NavigationRailLabelType.all,
-                        extended: false,
-                      ),
-                      Expanded(
-                          child: widget
-                              ._destinations[notifier.navBarSelection].body),
-                    ],
-                  ),
+            body: SafeArea(
+              child: widget.verticalLayout
+                  ? widget._destinations[notifier.navBarSelection].body
+                  : Row(
+                      children: [
+                        NavigationRail(
+                          destinations: widget._navigationRailDestinations,
+                          selectedIndex: notifier.navBarSelection,
+                          onDestinationSelected: notifier.changeNavBarSelection,
+                          labelType: NavigationRailLabelType.all,
+                          extended: false,
+                        ),
+                        Expanded(
+                            child: widget
+                                ._destinations[notifier.navBarSelection].body),
+                      ],
+                    ),
+            ),
             bottomNavigationBar: widget.verticalLayout
                 ? BottomNavigationBar(
                     currentIndex: notifier.navBarSelection,

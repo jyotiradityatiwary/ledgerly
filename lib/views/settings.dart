@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:ledgerly/notifiers/login_notifier.dart';
 import 'package:ledgerly/services/database_manager.dart';
-import 'package:ledgerly/views/accounts/categories.dart';
+import 'package:ledgerly/views/categories.dart';
 import 'package:ledgerly/views/reusable/content_container.dart';
 import 'package:provider/provider.dart';
 

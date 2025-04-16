@@ -5,6 +5,7 @@ import 'package:ledgerly/model/data_classes.dart';
 import 'package:ledgerly/model/insights.dart';
 import 'package:ledgerly/notifiers/login_notifier.dart';
 import 'package:ledgerly/views/reusable/content_container.dart';
+import 'package:ledgerly/views/reusable/loading_screen.dart';
 import 'package:provider/provider.dart';
 
 class InsightsPage extends StatefulWidget {
@@ -269,6 +270,35 @@ class _Indicator extends StatelessWidget {
         ),
         Text(label),
       ],
+    );
+  }
+}
+
+class InsightsPageFAB extends StatelessWidget {
+  const InsightsPageFAB({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return FloatingActionButton.extended(
+      onPressed: () {
+        final currencyPrecision =
+            Provider.of<LoginNotifier>(context, listen: false)
+                .user!
+                .currencyPrecision;
+        Navigator.of(context).push(MaterialPageRoute(
+          builder: (context) => LoadingScreen(
+            future: exportToCsv(currencyPrecision),
+            label: 'Please wait while we export your data....',
+            onCompleted: (_) => ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Exported CSV file to app directory.'),
+              ),
+            ),
+          ),
+        ));
+      },
+      label: const Text('Export'),
+      icon: const Icon(Icons.import_export),
     );
   }
 }

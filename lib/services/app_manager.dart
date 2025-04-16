@@ -11,7 +11,10 @@ const String databseeFileName = "db.sqlite3";
 const String preferencesFileName = 'preferences.json';
 const String appDirName = 'ledgerly';
 
-Future<String> getAppDirPath() async {
+String? _appDirPath;
+String get appDirPath => _appDirPath!;
+
+Future<String> _getAppDirPath() async {
   final String documentsDirectoryPath =
       (await getApplicationDocumentsDirectory()).path;
   final String appDirPath = p.join(documentsDirectoryPath, appDirName);
@@ -20,8 +23,8 @@ Future<String> getAppDirPath() async {
 
 /// Handles initialization of this app. Call this with `await` keyword from the main function.
 Future<void> initializeApp() async {
+  _appDirPath = await _getAppDirPath();
   // create app directory if not present
-  final String appDirPath = await getAppDirPath();
   if (!Directory(appDirPath).existsSync()) {
     Directory(appDirPath).createSync(recursive: true);
     developer.log("App Directory Created");
